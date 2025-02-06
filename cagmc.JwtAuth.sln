@@ -2,6 +2,8 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "cagmc.JwtAuth.WebApi", "cagmc.JwtAuth.WebApi\cagmc.JwtAuth.WebApi.csproj", "{89F0EAD3-D807-4756-98F4-5BAB91DCB512}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "cagmc.JwtAuth.WebApi.Test", "cagmc.JwtAuth.WebApi.Test\cagmc.JwtAuth.WebApi.Test.csproj", "{13EF51E1-1F68-43C3-A414-CDE40C0E4B2C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -12,5 +14,9 @@ Global
 		{89F0EAD3-D807-4756-98F4-5BAB91DCB512}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{89F0EAD3-D807-4756-98F4-5BAB91DCB512}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{89F0EAD3-D807-4756-98F4-5BAB91DCB512}.Release|Any CPU.Build.0 = Release|Any CPU
+		{13EF51E1-1F68-43C3-A414-CDE40C0E4B2C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{13EF51E1-1F68-43C3-A414-CDE40C0E4B2C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{13EF51E1-1F68-43C3-A414-CDE40C0E4B2C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{13EF51E1-1F68-43C3-A414-CDE40C0E4B2C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

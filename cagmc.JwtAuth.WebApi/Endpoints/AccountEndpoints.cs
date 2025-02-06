@@ -20,7 +20,7 @@ public static class AccountEndpoints
             {
                 var token = await accountService.LoginAsync(model, cancellationToken);
                 
-                return Results.Ok(new { token });
+                return Results.Ok(token);
             })
             .WithName("Login");
         
