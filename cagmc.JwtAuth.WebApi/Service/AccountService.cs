@@ -42,6 +42,11 @@ internal sealed class AccountService(
         var token = jwtService.GenerateToken(request.Username, tokenExpires, claims);
         var refreshToken = jwtService.GenerateRefreshToken();
 
+        var refreshTokenData = new RefreshTokenData
+        {
+            Username = request.Username, RefreshToken = refreshToken, Expires = refreshTokenExpires
+        };
+
         var response = new LoginResponse
         {
             Token = token,
@@ -50,23 +55,24 @@ internal sealed class AccountService(
             RefreshExpires = refreshTokenExpires
         };
         
-        var oldToken = await dbContext.Set<RefreshTokenData>()
-            .AsNoTracking()
-            .FirstOrDefaultAsync(t => t.Username == request.Username, cancellationToken);
+        await ManageRefreshTokenDataAsync(request, refreshTokenData, cancellationToken);
 
-        if (oldToken is not null)
-        {
-            dbContext.Remove(oldToken);
-        }
+        return response;
+    }
 
-        dbContext.Add(new RefreshTokenData
-        {
-            Username = request.Username, RefreshToken = refreshToken, Expires = refreshTokenExpires
-        });
-           
+    private async Task ManageRefreshTokenDataAsync(LoginRequest request,
+        RefreshTokenData refreshTokenData, CancellationToken cancellationToken)
+    {
+        await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
+        
+        await dbContext.Set<RefreshTokenData>()
+            .Where(t => t.Username == request.Username)
+            .ExecuteDeleteAsync(cancellationToken);
+
+        dbContext.Add(refreshTokenData);
         await dbContext.SaveChangesAsync(cancellationToken);
         
-        return response;
+        await transaction.CommitAsync(cancellationToken);
     }
 
     public async Task<RefreshTokenResponse> RefreshTokenAsync(RefreshTokenRequest request, CancellationToken cancellationToken = default)
