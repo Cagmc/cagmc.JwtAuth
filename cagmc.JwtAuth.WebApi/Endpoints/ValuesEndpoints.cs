@@ -16,16 +16,24 @@ public static class ValuesEndpoints
     
     private static RouteGroupBuilder ConfigureValuesRoutes(this RouteGroupBuilder builder)
     {
-        builder.MapGet("/anonimous", () => "Hello World!")
+        builder.MapGet("/anonimous", () => "Hello Anonimous!")
             .WithName("GetAnonimous");
         
-        builder.MapGet("/authenticated", () => "Hello World!")
+        builder.MapGet("/authenticated", () => "Hello Authenticated!")
             .RequireAuthorization()
             .WithName("GetAuthenticated");
         
-        builder.MapGet("/admin", () => "Hello World!")
+        builder.MapGet("/admin", () => "Hello Admin!")
             .RequireAuthorization(Policies.AdminPolicy)
             .WithName("GetAdmin");
+        
+        builder.MapGet("/read", () => "Hello Reader!")
+            .RequireAuthorization(Policies.ReadOnlyPolicy)
+            .WithName("GetRead");
+        
+        builder.MapGet("/edit", () => "Hello Editor!")
+            .RequireAuthorization(Policies.EditorPolicy)
+            .WithName("GetEdit");
         
         return builder;
     }

@@ -30,6 +30,15 @@ builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy(Policies.AdminPolicy, policy =>
         policy.RequireRole(Roles.Admin));
+    
+    options.AddPolicy(Policies.ReadOnlyPolicy, policy =>
+        policy.RequireClaim(Claims.Read, "true"));
+    
+    options.AddPolicy(Policies.EditorPolicy, policy =>
+    {
+        policy.RequireClaim(Claims.Write, "true");
+        policy.RequireClaim(Claims.Read, "true");
+    });
 });
 
 builder.Services.AddOpenApi();

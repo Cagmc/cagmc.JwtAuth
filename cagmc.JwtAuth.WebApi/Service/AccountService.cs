@@ -25,6 +25,17 @@ internal sealed class AccountService(IJwtService jwtService) : IAccountService
         {
             claims.Add(new Claim(ClaimTypes.Role, Roles.Admin));
         }
+
+        if (request.Username == "reader")
+        {
+            claims.Add(new Claim(Claims.Read, "true"));
+        }
+
+        if (request.Username == "editor")
+        {
+            claims.Add(new Claim(Claims.Write, "true"));
+            claims.Add(new Claim(Claims.Read, "true"));
+        }
         
         var token = jwtService.GenerateToken(request.Username, tokenExpires, claims);
         var refreshToken = jwtService.GenerateRefreshToken();
