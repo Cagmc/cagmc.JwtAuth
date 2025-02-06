@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc.Testing;
 
 namespace cagmc.JwtAuth.WebApi.Test.EndpointTests;
 
-public sealed class AccountEndpointTests(WebApplicationFactory<Program> factory) : IClassFixture<WebApplicationFactory<Program>>
+public sealed class AccountEndpointTests(WebApplicationFactory<Program> factory) : TestBase(factory)
 {
     [Fact]
     public async Task LoginAsync()
@@ -32,25 +32,7 @@ public sealed class AccountEndpointTests(WebApplicationFactory<Program> factory)
     public async Task LogoutAsync()
     {
         // Arrange
-        var client = factory.CreateClient();
-        
-        var loginRequest = new LoginRequest
-        {
-            Username = "admin",
-            Password = "<PASSWORD>"
-        };
-        
-        var httpResponseMessage = await client.PostAsJsonAsync("/api/accounts/login", loginRequest);
-        
-        httpResponseMessage.EnsureSuccessStatusCode();
-    
-        var loginResponse = await httpResponseMessage.Content.ReadFromJsonAsync<LoginResponse>();
-        Assert.NotNull(loginResponse);
-        
-        var token = loginResponse.Token;
-        Assert.False(string.IsNullOrEmpty(token), "Token should not be null or empty.");
-    
-        client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        var client = await GetAuthenticatedClientAsync("admin");
         
         // Act
         var logoutResponse = await client.PostAsync("/api/accounts/logout", null);

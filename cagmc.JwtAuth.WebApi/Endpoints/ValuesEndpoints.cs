@@ -16,8 +16,8 @@ public static class ValuesEndpoints
     
     private static RouteGroupBuilder ConfigureValuesRoutes(this RouteGroupBuilder builder)
     {
-        builder.MapGet("/anonimous", () => "Hello Anonimous!")
-            .WithName("GetAnonimous");
+        builder.MapGet("/anonymous", () => "Hello Anonymous!")
+            .WithName("GetAnonymous");
         
         builder.MapGet("/authenticated", () => "Hello Authenticated!")
             .RequireAuthorization()
