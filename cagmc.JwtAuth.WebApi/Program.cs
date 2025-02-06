@@ -1,4 +1,5 @@
 using System.Text;
+using cagmc.JwtAuth.WebApi.Constants;
 using cagmc.JwtAuth.WebApi.Service;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
@@ -21,11 +22,15 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateIssuerSigningKey = true,
             ValidIssuer = builder.Configuration["Jwt:Issuer"],
             ValidAudience = builder.Configuration["Jwt:Audience"],
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Secret"]))
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Secret"]!))
         };
     });
 
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy(Policies.AdminPolicy, policy =>
+        policy.RequireRole(Roles.Admin));
+});
 
 builder.Services.AddOpenApi();
 
@@ -42,7 +47,9 @@ app.UseAuthorization();
 
 app.UseHttpsRedirection();
 
-app.MapAccountEndpoints();
+app
+    .MapAccountEndpoints()
+    .MapValuesEndpoints();
 
 await app.RunAsync();
 

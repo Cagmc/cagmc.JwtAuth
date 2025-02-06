@@ -9,20 +9,25 @@ namespace cagmc.JwtAuth.WebApi.Service;
 
 public interface IJwtService
 {
-    public string GenerateToken(string username, DateTime expires);
+    public string GenerateToken(string username, DateTime expires, List<Claim>? additionalClaims);
     public string GenerateRefreshToken();
     public bool ValidateToken(string token);
 }
 
 internal sealed class JwtService(IOptions<JwtOptions> options) : IJwtService
 {
-    public string GenerateToken(string username, DateTime expires)
+    public string GenerateToken(string username, DateTime expires, List<Claim>? additionalClaims)
     {
         var claims = new[]
         {
             new Claim(JwtRegisteredClaimNames.Sub, username),
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
         };
+        
+        if (additionalClaims is not null)
+        {
+            claims = claims.Concat(additionalClaims).ToArray();
+        }
 
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(options.Value.Secret));
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);

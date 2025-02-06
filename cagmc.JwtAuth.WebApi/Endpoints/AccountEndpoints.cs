@@ -38,7 +38,6 @@ public static class AccountEndpoints
                 
                 return Results.Ok(response);
             })
-            .RequireAuthorization()
             .WithName("RefreshToken");
     
         return builder;

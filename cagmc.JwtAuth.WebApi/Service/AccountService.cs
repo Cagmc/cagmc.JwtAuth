@@ -1,4 +1,7 @@
-﻿namespace cagmc.JwtAuth.WebApi.Service;
+﻿using System.Security.Claims;
+using cagmc.JwtAuth.WebApi.Constants;
+
+namespace cagmc.JwtAuth.WebApi.Service;
 
 public interface IAccountService
 {
@@ -16,7 +19,14 @@ internal sealed class AccountService(IJwtService jwtService) : IAccountService
         var tokenExpires = DateTime.Now.AddMinutes(30);
         var refreshTokenExpires = DateTime.Now.AddDays(7);
         
-        var token = jwtService.GenerateToken(request.Username, tokenExpires);
+        List<Claim> claims = [];
+
+        if (request.Username == "admin")
+        {
+            claims.Add(new Claim(ClaimTypes.Role, Roles.Admin));
+        }
+        
+        var token = jwtService.GenerateToken(request.Username, tokenExpires, claims);
         var refreshToken = jwtService.GenerateRefreshToken();
 
         var response = new LoginResponse
@@ -53,8 +63,15 @@ internal sealed class AccountService(IJwtService jwtService) : IAccountService
         }
     
         var tokenExpires = DateTime.Now.AddMinutes(30);
+        
+        List<Claim> claims = [];
+
+        if (existingToken.Username == "admin")
+        {
+            claims.Add(new Claim(ClaimTypes.Role, "admin"));
+        }
     
-        var newToken = jwtService.GenerateToken(existingToken.Username, tokenExpires);
+        var newToken = jwtService.GenerateToken(existingToken.Username, tokenExpires, claims);
     
         var response = new RefreshTokenResponse
         {
