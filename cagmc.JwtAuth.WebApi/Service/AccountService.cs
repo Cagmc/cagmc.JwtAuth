@@ -1,6 +1,5 @@
 ﻿using System.Security.Claims;
-using cagmc.JwtAuth.WebApi.Constants;
-using cagmc.JwtAuth.WebApi.Infrastructure;
+using cagmc.JwtAuth.WebApi.Domain;
 using Microsoft.EntityFrameworkCore;
 
 namespace cagmc.JwtAuth.WebApi.Service;
@@ -18,30 +17,22 @@ internal sealed class AccountService(
 {
     public async Task<LoginResponse> LoginAsync(LoginRequest request, CancellationToken cancellationToken = default)
     {
+        var user = await dbContext.Set<User>()
+            .AsNoTracking()
+            .Where(x => x.Username == request.Username )
+            .Where(x => x.Password == request.Password)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (user is null)
+        {
+            throw new UnauthorizedAccessException("Invalid username or password.");
+        }
+        
         var tokenExpires = DateTime.Now.AddMinutes(30);
+        var token = GetRefreshTokenForUser(user, tokenExpires);
+        
         var refreshTokenExpires = DateTime.Now.AddDays(7);
-        
-        List<Claim> claims = [];
-
-        if (request.Username == "admin")
-        {
-            claims.Add(new Claim(ClaimTypes.Role, Roles.Admin));
-        }
-
-        if (request.Username == "reader")
-        {
-            claims.Add(new Claim(Claims.Read, "true"));
-        }
-
-        if (request.Username == "editor")
-        {
-            claims.Add(new Claim(Claims.Write, "true"));
-            claims.Add(new Claim(Claims.Read, "true"));
-        }
-        
-        var token = jwtService.GenerateToken(request.Username, tokenExpires, claims);
         var refreshToken = jwtService.GenerateRefreshToken();
-
         var refreshTokenData = new RefreshTokenData
         {
             Username = request.Username, RefreshToken = refreshToken, Expires = refreshTokenExpires
@@ -63,16 +54,18 @@ internal sealed class AccountService(
     private async Task ManageRefreshTokenDataAsync(LoginRequest request,
         RefreshTokenData refreshTokenData, CancellationToken cancellationToken)
     {
-        await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
-        
-        await dbContext.Set<RefreshTokenData>()
+        var existingRefreshToken = await dbContext.Set<RefreshTokenData>()
+            .AsTracking()
             .Where(t => t.Username == request.Username)
-            .ExecuteDeleteAsync(cancellationToken);
+            .SingleOrDefaultAsync(cancellationToken);
+
+        if (existingRefreshToken is not null)
+        {
+            dbContext.Remove(existingRefreshToken);
+        }
 
         dbContext.Add(refreshTokenData);
         await dbContext.SaveChangesAsync(cancellationToken);
-        
-        await transaction.CommitAsync(cancellationToken);
     }
 
     public async Task<RefreshTokenResponse> RefreshTokenAsync(RefreshTokenRequest request, CancellationToken cancellationToken = default)
@@ -93,17 +86,18 @@ internal sealed class AccountService(
             
             throw new UnauthorizedAccessException("Refresh token expired.");
         }
-    
-        var tokenExpires = DateTime.Now.AddMinutes(30);
         
-        List<Claim> claims = [];
+        var user = await dbContext.Set<User>()
+            .AsNoTracking()
+            .FirstOrDefaultAsync(u => u.Username == existingToken.Username, cancellationToken);
 
-        if (existingToken.Username == "admin")
+        if (user is null)
         {
-            claims.Add(new Claim(ClaimTypes.Role, "admin"));
+            throw new UnauthorizedAccessException("Invalid user.");
         }
     
-        var newToken = jwtService.GenerateToken(existingToken.Username, tokenExpires, claims);
+        var tokenExpires = DateTime.Now.AddMinutes(30);
+        var newToken = GetRefreshTokenForUser(user, tokenExpires);
     
         var response = new RefreshTokenResponse
         {
@@ -112,6 +106,17 @@ internal sealed class AccountService(
         };
     
         return response;
+    }
+
+    private string GetRefreshTokenForUser(User user, DateTime tokenExpires)
+    {
+        List<Claim> claims = [];
+        user.Claims.ForEach(claim => claims.Add(new Claim(claim.Type, claim.Value)));
+        user.Roles.ForEach(role => claims.Add(new Claim(ClaimTypes.Role, role.Name)));
+    
+        var newToken = jwtService.GenerateToken(user.Username, tokenExpires, claims);
+        
+        return newToken;
     }
 
     public Task LogoutAsync(CancellationToken cancellationToken = default)

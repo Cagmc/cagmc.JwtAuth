@@ -52,7 +52,7 @@ public sealed class ValueEndpointTests(WebApplicationFactory<Program> factory) :
     public async Task GetAdmin_Fails()
     {
         // Arrange
-        var client = await GetAuthenticatedClientAsync("customer");
+        var client = await GetAuthenticatedClientAsync("reader");
         
         // Act
         var response = await client.GetAsync("/api/values/admin");
