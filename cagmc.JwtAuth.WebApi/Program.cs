@@ -1,11 +1,15 @@
 using System.Text;
 using cagmc.JwtAuth.WebApi.Constants;
+using cagmc.JwtAuth.WebApi.Infrastructure;
 using cagmc.JwtAuth.WebApi.Service;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddDbContext<DbContext, ApplicationDbContext>(options => options.UseInMemoryDatabase("JwtAuthDb"));
 
 builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection("Jwt"));
 builder.Services.AddScoped<IJwtService, JwtService>();

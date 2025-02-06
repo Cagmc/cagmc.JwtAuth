@@ -1,5 +1,7 @@
 ﻿using System.Security.Claims;
 using cagmc.JwtAuth.WebApi.Constants;
+using cagmc.JwtAuth.WebApi.Infrastructure;
+using Microsoft.EntityFrameworkCore;
 
 namespace cagmc.JwtAuth.WebApi.Service;
 
@@ -10,11 +12,11 @@ public interface IAccountService
     Task LogoutAsync(CancellationToken cancellationToken = default);
 }
 
-internal sealed class AccountService(IJwtService jwtService) : IAccountService
+internal sealed class AccountService(
+    DbContext dbContext,
+    IJwtService jwtService) : IAccountService
 {
-    private static readonly List<RefreshTokenData> RefreshTokens = [];
-    
-    public Task<LoginResponse> LoginAsync(LoginRequest request, CancellationToken cancellationToken = default)
+    public async Task<LoginResponse> LoginAsync(LoginRequest request, CancellationToken cancellationToken = default)
     {
         var tokenExpires = DateTime.Now.AddMinutes(30);
         var refreshTokenExpires = DateTime.Now.AddDays(7);
@@ -48,18 +50,30 @@ internal sealed class AccountService(IJwtService jwtService) : IAccountService
             RefreshExpires = refreshTokenExpires
         };
         
-        RefreshTokens.RemoveAll(t => t.Username == request.Username);
-        RefreshTokens.Add(new RefreshTokenData
+        var oldToken = await dbContext.Set<RefreshTokenData>()
+            .AsNoTracking()
+            .FirstOrDefaultAsync(t => t.Username == request.Username, cancellationToken);
+
+        if (oldToken is not null)
+        {
+            dbContext.Remove(oldToken);
+        }
+
+        dbContext.Add(new RefreshTokenData
         {
             Username = request.Username, RefreshToken = refreshToken, Expires = refreshTokenExpires
         });
+           
+        await dbContext.SaveChangesAsync(cancellationToken);
         
-        return Task.FromResult(response);
+        return response;
     }
 
-    public Task<RefreshTokenResponse> RefreshTokenAsync(RefreshTokenRequest request, CancellationToken cancellationToken = default)
+    public async Task<RefreshTokenResponse> RefreshTokenAsync(RefreshTokenRequest request, CancellationToken cancellationToken = default)
     {
-        var existingToken = RefreshTokens.FirstOrDefault(t => t.RefreshToken == request.RefreshToken);
+        var existingToken = await dbContext.Set<RefreshTokenData>()
+            .AsTracking()
+            .FirstOrDefaultAsync(t => t.RefreshToken == request.RefreshToken, cancellationToken);
         
         if (existingToken is null)
         {
@@ -68,7 +82,8 @@ internal sealed class AccountService(IJwtService jwtService) : IAccountService
 
         if (existingToken.Expires < DateTime.Now)
         {
-            RefreshTokens.Remove(existingToken);
+            dbContext.Remove(existingToken);
+            await dbContext.SaveChangesAsync(cancellationToken);
             
             throw new UnauthorizedAccessException("Refresh token expired.");
         }
@@ -90,20 +105,13 @@ internal sealed class AccountService(IJwtService jwtService) : IAccountService
             Expires = tokenExpires
         };
     
-        return Task.FromResult(response);
+        return response;
     }
 
     public Task LogoutAsync(CancellationToken cancellationToken = default)
     {
         return Task.CompletedTask;
     }
-}
-
-public sealed record RefreshTokenData
-{
-    public required string Username { get; init; }
-    public required string RefreshToken { get; init; }
-    public required DateTime Expires { get; init; }
 }
 
 public sealed record LoginRequest
