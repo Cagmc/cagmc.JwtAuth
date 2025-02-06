@@ -24,8 +24,6 @@ public static class AccountEndpoints
             })
             .WithName("Login");
         
-        
-
         builder.MapPost("/logout", async (IAccountService accountService, CancellationToken cancellationToken) =>
             {
                 await accountService.LogoutAsync(cancellationToken);
@@ -33,17 +31,16 @@ public static class AccountEndpoints
             })
             .RequireAuthorization()
             .WithName("Logout");
-
         
-            builder.MapPost("/refresh", async (RefreshTokenRequest model, IAccountService accountService, CancellationToken cancellationToken) =>
-                {
-                    var response = await accountService.RefreshTokenAsync(model, cancellationToken);
-                    
-                    return Results.Ok(response);
-                })
-                .RequireAuthorization()
-                .WithName("RefreshToken");
-        
-            return builder;
-        }
+        builder.MapPost("/refresh", async (RefreshTokenRequest model, IAccountService accountService, CancellationToken cancellationToken) =>
+            {
+                var response = await accountService.RefreshTokenAsync(model, cancellationToken);
+                
+                return Results.Ok(response);
+            })
+            .RequireAuthorization()
+            .WithName("RefreshToken");
+    
+        return builder;
+    }
 }
