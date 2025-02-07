@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
+using cagmc.JwtAuth.WebApi.Constants;
 using cagmc.JwtAuth.WebApi.Service;
 using Microsoft.AspNetCore.Mvc.Testing;
 
@@ -78,5 +79,24 @@ public sealed class AccountEndpointTests(WebApplicationFactory<Program> factory)
         
         var refreshTokenResponseContent = await refreshTokenResponse.Content.ReadFromJsonAsync<RefreshTokenResponse>();
         Assert.False(string.IsNullOrEmpty(refreshTokenResponseContent?.Token), "Token should not be null or empty.");
+    }
+
+    [Fact]
+    public async Task MeAsync()
+    {
+        // Arrange
+        var client = await GetAuthenticatedClientAsync("admin");
+        
+        // Act
+        var meResponse = await client.GetAsync("/api/accounts/me");
+        
+        // Assert
+        meResponse.EnsureSuccessStatusCode();
+        Assert.Equal(HttpStatusCode.OK, meResponse.StatusCode);
+
+        var viewModel = await meResponse.Content.ReadFromJsonAsync<MeViewModel>();
+        
+        Assert.NotNull(viewModel);
+        Assert.Equal(Roles.Admin, viewModel.Role);
     }
 }

@@ -39,6 +39,15 @@ public static class AccountEndpoints
                 return Results.Ok(response);
             })
             .WithName("RefreshToken");
+
+        builder.MapGet("/me", async (IAccountService accountService, CancellationToken cancellationToken) =>
+            {
+                var meViewModel = await accountService.MeAsync(cancellationToken);
+
+                return meViewModel;
+            })
+            .RequireAuthorization()
+            .WithName("Me");
     
         return builder;
     }

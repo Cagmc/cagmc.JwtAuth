@@ -9,10 +9,12 @@ public interface IAccountService
     Task<LoginResponse> LoginAsync(LoginRequest request, CancellationToken cancellationToken = default);
     Task<RefreshTokenResponse> RefreshTokenAsync(RefreshTokenRequest request, CancellationToken cancellationToken = default);
     Task LogoutAsync(CancellationToken cancellationToken = default);
+    Task<MeViewModel> MeAsync(CancellationToken cancellationToken = default);
 }
 
 internal sealed class AccountService(
     DbContext dbContext,
+    ICurrentUserService currentUserService,
     IJwtService jwtService) : IAccountService
 {
     public async Task<LoginResponse> LoginAsync(LoginRequest request, CancellationToken cancellationToken = default)
@@ -110,7 +112,11 @@ internal sealed class AccountService(
 
     private string GetRefreshTokenForUser(User user, DateTime tokenExpires)
     {
-        List<Claim> claims = [];
+        List<Claim> claims =
+        [
+            new (ClaimTypes.Name, user.Username)
+        ];
+        
         user.Claims.ForEach(claim => claims.Add(new Claim(claim.Type, claim.Value)));
         user.Roles.ForEach(role => claims.Add(new Claim(ClaimTypes.Role, role.Name)));
     
@@ -122,6 +128,18 @@ internal sealed class AccountService(
     public Task LogoutAsync(CancellationToken cancellationToken = default)
     {
         return Task.CompletedTask;
+    }
+
+    public Task<MeViewModel> MeAsync(CancellationToken cancellationToken = default)
+    {
+        var userName = currentUserService.UserName;
+        var role = currentUserService.Role;
+        
+        return Task.FromResult(new MeViewModel
+        {
+            Username = userName,
+            Role = role
+        });
     }
 }
 
@@ -148,4 +166,10 @@ public sealed record RefreshTokenResponse
 {
     public required string Token { get; init; }
     public required DateTime Expires { get; init; }
+}
+
+public sealed record MeViewModel
+{
+    public required string Username { get; init; }
+    public required string Role { get; init; }
 }

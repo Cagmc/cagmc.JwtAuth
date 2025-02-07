@@ -4,6 +4,7 @@ namespace cagmc.JwtAuth.WebApi.Service;
 
 public interface ICurrentUserService
 {
+    string UserName { get; }
     string Role { get; }
 }
 
@@ -11,5 +12,8 @@ internal sealed class CurrentUserService(IHttpContextAccessor httpContextAccesso
 {
     private readonly HttpContext? _httpContext = httpContextAccessor.HttpContext;
 
-    public string Role => _httpContext?.User.FindFirst(ClaimTypes.Role)?.Value ?? string.Empty;
+    public string UserName => GetClaimValue(ClaimTypes.Name);
+    public string Role => GetClaimValue(ClaimTypes.Role);
+    
+    private string GetClaimValue(string claimType) => _httpContext?.User.FindFirst(claimType)?.Value ?? string.Empty;
 }
