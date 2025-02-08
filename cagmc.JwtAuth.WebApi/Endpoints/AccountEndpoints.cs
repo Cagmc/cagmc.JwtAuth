@@ -1,4 +1,5 @@
-﻿using cagmc.JwtAuth.WebApi.Service;
+﻿using cagmc.JwtAuth.WebApi.Constants;
+using cagmc.JwtAuth.WebApi.Service;
 
 namespace Microsoft.AspNetCore.Builder;
 
@@ -29,7 +30,7 @@ public static class AccountEndpoints
                 await accountService.LogoutAsync(cancellationToken);
                 return Results.Ok();
             })
-            .RequireAuthorization()
+            .RequireAuthorization(Policies.MultitenantPolicy)
             .WithName("Logout");
         
         builder.MapPost("/refresh", async (RefreshTokenRequest model, IAccountService accountService, CancellationToken cancellationToken) =>
@@ -46,7 +47,7 @@ public static class AccountEndpoints
 
                 return meViewModel;
             })
-            .RequireAuthorization()
+            .RequireAuthorization(Policies.MultitenantPolicy)
             .WithName("Me");
     
         return builder;

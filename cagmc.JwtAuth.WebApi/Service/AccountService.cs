@@ -1,5 +1,7 @@
 ﻿using System.Security.Claims;
 using cagmc.JwtAuth.WebApi.Domain;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 
 namespace cagmc.JwtAuth.WebApi.Service;
@@ -14,6 +16,7 @@ public interface IAccountService
 
 internal sealed class AccountService(
     DbContext dbContext,
+    IHttpContextAccessor httpContextAccessor,
     ICurrentUserService currentUserService,
     IJwtService jwtService) : IAccountService
 {
@@ -50,7 +53,33 @@ internal sealed class AccountService(
         
         await ManageRefreshTokenDataAsync(request, refreshTokenData, cancellationToken);
 
+        if (request.IsCookie)
+        {
+            await SignInWithCookieAsync(user, request.IsPersistent);
+        }
+
         return response;
+    }
+
+    private async Task SignInWithCookieAsync(User user, bool isPersistent)
+    {
+        List<Claim> claims =
+        [
+            new(ClaimTypes.Name, user.Username)
+        ];
+        user.Roles.ForEach(role => claims.Add(new Claim(ClaimTypes.Role, role.Name)));
+        user.Claims.ForEach(claim => claims.Add(new Claim(claim.Type, claim.Value)));
+        
+        var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+        var claimsPrincipal = new ClaimsPrincipal(claimsIdentity);
+        
+        await httpContextAccessor.HttpContext!.SignInAsync(
+            CookieAuthenticationDefaults.AuthenticationScheme, 
+            claimsPrincipal, new AuthenticationProperties
+            {
+                IsPersistent = isPersistent,
+                ExpiresUtc = DateTime.UtcNow.AddDays(7)
+            });
     }
 
     private async Task ManageRefreshTokenDataAsync(LoginRequest request,
@@ -125,9 +154,10 @@ internal sealed class AccountService(
         return newToken;
     }
 
-    public Task LogoutAsync(CancellationToken cancellationToken = default)
+    public async Task LogoutAsync(CancellationToken cancellationToken = default)
     {
-        return Task.CompletedTask;
+        await httpContextAccessor.HttpContext!
+            .SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
     }
 
     public Task<MeViewModel> MeAsync(CancellationToken cancellationToken = default)
@@ -147,6 +177,8 @@ public sealed record LoginRequest
 {
     public required string Username { get; init; }
     public required string Password { get; init; }
+    public bool IsPersistent { get; init; } = true;
+    public bool IsCookie { get; init; } = false;
 }
 
 public sealed record LoginResponse

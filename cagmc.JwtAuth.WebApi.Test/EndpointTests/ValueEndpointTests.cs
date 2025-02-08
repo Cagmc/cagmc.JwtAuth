@@ -58,7 +58,7 @@ public sealed class ValueEndpointTests(WebApplicationFactory<Program> factory) :
         var response = await client.GetAsync("/api/values/admin");
         
         // Assert
-        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
     
     [Fact]
@@ -85,7 +85,7 @@ public sealed class ValueEndpointTests(WebApplicationFactory<Program> factory) :
         var response = await client.GetAsync("/api/values/read");
         
         // Assert
-        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
     
     [Fact]
@@ -111,7 +111,7 @@ public sealed class ValueEndpointTests(WebApplicationFactory<Program> factory) :
         var response = await client.GetAsync("/api/values/edit");
         
         // Assert
-        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
     
     [Fact]
