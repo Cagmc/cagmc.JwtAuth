@@ -11,7 +11,8 @@ using Scalar.AspNetCore;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddScoped<IDatabaseInitializer, DatabaseInitializer>();
-builder.Services.AddDbContext<DbContext, ApplicationDbContext>(options => options.UseInMemoryDatabase("JwtAuthDb"));
+builder.Services.AddDbContext<DbContext, ApplicationDbContext>(options => 
+    options.UseInMemoryDatabase(builder.Configuration.GetConnectionString("DefaultConnection")!));
 
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();

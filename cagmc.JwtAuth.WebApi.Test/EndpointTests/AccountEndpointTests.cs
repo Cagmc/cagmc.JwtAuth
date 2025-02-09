@@ -2,17 +2,17 @@ using System.Net;
 using System.Net.Http.Json;
 using cagmc.JwtAuth.WebApi.Constants;
 using cagmc.JwtAuth.WebApi.Service;
-using Microsoft.AspNetCore.Mvc.Testing;
+using Xunit.Abstractions;
 
 namespace cagmc.JwtAuth.WebApi.Test.EndpointTests;
 
-public sealed class AccountEndpointTests(WebApplicationFactory<Program> factory) : TestBase(factory)
+public sealed class AccountEndpointTests(ITestOutputHelper testOutputHelper, WebApiFactory factory) : TestBase(testOutputHelper, factory)
 {
     [Fact]
     public async Task LoginAsync()
     {
         // Arrange
-        var client = factory.CreateClient();
+        var client = Factory.CreateClient();
 
         var loginRequest = new LoginRequest
         {
@@ -47,7 +47,7 @@ public sealed class AccountEndpointTests(WebApplicationFactory<Program> factory)
     public async Task RefreshTokenAsync()
     {
         // Arrange
-        var client = factory.CreateClient();
+        var client = Factory.CreateClient();
         
         var loginRequest = new LoginRequest
         {
@@ -67,7 +67,7 @@ public sealed class AccountEndpointTests(WebApplicationFactory<Program> factory)
 
         var refreshRequest = new RefreshTokenRequest
         {
-            RefreshToken = loginResponse!.RefreshToken,
+            RefreshToken = loginResponse.RefreshToken,
         };
         
         // Act

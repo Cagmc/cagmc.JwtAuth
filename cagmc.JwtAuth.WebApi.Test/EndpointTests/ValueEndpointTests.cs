@@ -1,17 +1,15 @@
 ﻿using System.Net;
-using System.Net.Http.Json;
-using cagmc.JwtAuth.WebApi.Service;
-using Microsoft.AspNetCore.Mvc.Testing;
+using Xunit.Abstractions;
 
 namespace cagmc.JwtAuth.WebApi.Test.EndpointTests;
 
-public sealed class ValueEndpointTests(WebApplicationFactory<Program> factory) : TestBase(factory)
+public sealed class ValueEndpointTests(ITestOutputHelper testOutputHelper, WebApiFactory factory) : TestBase(testOutputHelper, factory)
 {
     [Fact]
     public async Task GetAnonymous()
     {
         // Arrange
-        var client = factory.CreateClient();
+        var client = Factory.CreateClient();
         
         // Act
         var response = await client.GetAsync("/api/values/anonymous");
@@ -25,7 +23,7 @@ public sealed class ValueEndpointTests(WebApplicationFactory<Program> factory) :
     public async Task GetAuthenticated_Fails()
     {
         // Arrange
-        var client = factory.CreateClient();
+        var client = Factory.CreateClient();
         
         // Act
         var response = await client.GetAsync("/api/values/authenticated");
