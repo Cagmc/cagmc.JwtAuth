@@ -32,7 +32,7 @@ internal sealed class AccountService(
 
         if (user is null)
         {
-            return new Response<LoginResponse>{ Code = 401, IsSuccess = false };
+            return Response<LoginResponse>.Unauthorized;
         }
         
         var tokenExpires = DateTime.Now.AddMinutes(30);
@@ -127,7 +127,7 @@ internal sealed class AccountService(
 
         if (user is null)
         {
-            return new Response<RefreshTokenResponse> { Code = 401, IsSuccess = false };  
+            return Response<RefreshTokenResponse>.Unauthorized;  
         }
     
         var tokenExpires = DateTime.Now.AddMinutes(30);
