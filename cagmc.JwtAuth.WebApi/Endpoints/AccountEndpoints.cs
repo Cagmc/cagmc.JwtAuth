@@ -19,9 +19,14 @@ public static class AccountEndpoints
     {
         builder.MapPost("/login", async (LoginRequest model, IAccountService accountService, CancellationToken cancellationToken) =>
             {
-                var token = await accountService.LoginAsync(model, cancellationToken);
+                var response = await accountService.LoginAsync(model, cancellationToken);
+
+                if (response.Code == 401)
+                {
+                    return Results.Unauthorized(); 
+                }
                 
-                return Results.Ok(token);
+                return Results.Ok(response.Data);
             })
             .WithName("Login");
         
@@ -36,8 +41,18 @@ public static class AccountEndpoints
         builder.MapPost("/refresh", async (RefreshTokenRequest model, IAccountService accountService, CancellationToken cancellationToken) =>
             {
                 var response = await accountService.RefreshTokenAsync(model, cancellationToken);
+
+                if (response.Code == 400)
+                {
+                    return Results.BadRequest(response.Message);
+                }
                 
-                return Results.Ok(response);
+                if (response.Code == 401)
+                {
+                    return Results.Unauthorized();
+                }
+                
+                return Results.Ok(response.Data);
             })
             .WithName("RefreshToken");
 

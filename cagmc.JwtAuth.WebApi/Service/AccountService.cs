@@ -1,5 +1,6 @@
 ﻿using System.Security.Claims;
 using cagmc.JwtAuth.WebApi.Domain;
+using cagmc.Response.Core;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
@@ -8,8 +9,8 @@ namespace cagmc.JwtAuth.WebApi.Service;
 
 public interface IAccountService
 {
-    Task<LoginResponse> LoginAsync(LoginRequest request, CancellationToken cancellationToken = default);
-    Task<RefreshTokenResponse> RefreshTokenAsync(RefreshTokenRequest request, CancellationToken cancellationToken = default);
+    Task<Response<LoginResponse>> LoginAsync(LoginRequest request, CancellationToken cancellationToken = default);
+    Task<Response<RefreshTokenResponse>> RefreshTokenAsync(RefreshTokenRequest request, CancellationToken cancellationToken = default);
     Task LogoutAsync(CancellationToken cancellationToken = default);
     Task<MeViewModel> MeAsync(CancellationToken cancellationToken = default);
 }
@@ -20,7 +21,8 @@ internal sealed class AccountService(
     ICurrentUserService currentUserService,
     IJwtService jwtService) : IAccountService
 {
-    public async Task<LoginResponse> LoginAsync(LoginRequest request, CancellationToken cancellationToken = default)
+    public async Task<Response<LoginResponse>> LoginAsync(LoginRequest request,
+        CancellationToken cancellationToken = default)
     {
         var user = await dbContext.Set<User>()
             .AsNoTracking()
@@ -30,7 +32,7 @@ internal sealed class AccountService(
 
         if (user is null)
         {
-            throw new UnauthorizedAccessException("Invalid username or password.");
+            return new Response<LoginResponse>{ Code = 401, IsSuccess = false };
         }
         
         var tokenExpires = DateTime.Now.AddMinutes(30);
@@ -58,7 +60,7 @@ internal sealed class AccountService(
             await SignInWithCookieAsync(user, request.IsPersistent);
         }
 
-        return response;
+        return new Response<LoginResponse> { Data = response, IsSuccess = true };
     }
 
     private async Task SignInWithCookieAsync(User user, bool isPersistent)
@@ -99,7 +101,8 @@ internal sealed class AccountService(
         await dbContext.SaveChangesAsync(cancellationToken);
     }
 
-    public async Task<RefreshTokenResponse> RefreshTokenAsync(RefreshTokenRequest request, CancellationToken cancellationToken = default)
+    public async Task<Response<RefreshTokenResponse>> RefreshTokenAsync(RefreshTokenRequest request,
+        CancellationToken cancellationToken = default)
     {
         var existingToken = await dbContext.Set<RefreshTokenData>()
             .AsTracking()
@@ -107,7 +110,7 @@ internal sealed class AccountService(
         
         if (existingToken is null)
         {
-            throw new UnauthorizedAccessException("Invalid refresh token.");
+            return new Response<RefreshTokenResponse> { Code = 400, IsSuccess = false, Message = "Invalid token." };
         }
 
         if (existingToken.Expires < DateTime.Now)
@@ -115,7 +118,7 @@ internal sealed class AccountService(
             dbContext.Remove(existingToken);
             await dbContext.SaveChangesAsync(cancellationToken);
             
-            throw new UnauthorizedAccessException("Refresh token expired.");
+            return new Response<RefreshTokenResponse> { Code = 400, IsSuccess = false, Message = "Token expired."};
         }
         
         var user = await dbContext.Set<User>()
@@ -124,7 +127,7 @@ internal sealed class AccountService(
 
         if (user is null)
         {
-            throw new UnauthorizedAccessException("Invalid user.");
+            return new Response<RefreshTokenResponse> { Code = 401, IsSuccess = false };  
         }
     
         var tokenExpires = DateTime.Now.AddMinutes(30);
@@ -136,7 +139,7 @@ internal sealed class AccountService(
             Expires = tokenExpires
         };
     
-        return response;
+        return new Response<RefreshTokenResponse> { Data = response, IsSuccess = true };
     }
 
     private string GetRefreshTokenForUser(User user, DateTime tokenExpires)
