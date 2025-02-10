@@ -23,8 +23,11 @@ public abstract class TestBase : IClassFixture<WebApiFactory>
         var type = testOutputHelper.GetType();
         var testMember = type.GetField("test", BindingFlags.Instance | BindingFlags.NonPublic);
         var test = (ITest)testMember!.GetValue(testOutputHelper)!;
+        var testName = test.TestCase.DisplayName;
         
-        return test.DisplayName;
+        testOutputHelper.WriteLine($"Running test: {testName}");
+        
+        return testName;
     }
     
     protected async Task<HttpClient> GetAuthenticatedClientAsync(string username, string password = "<PASSWORD>")
