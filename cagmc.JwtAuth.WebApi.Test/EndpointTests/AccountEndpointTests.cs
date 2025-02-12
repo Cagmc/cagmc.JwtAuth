@@ -47,8 +47,10 @@ public sealed class AccountEndpointTests(ITestOutputHelper testOutputHelper, Web
         Assert.Equal(HttpStatusCode.OK, logoutResponse.StatusCode);
     }
 
-    [Fact]
-    public async Task RefreshTokenAsync()
+    [Theory]
+    [InlineData(AuthenticationMode.Jwt, "/api/accounts/refresh-token")]
+    [InlineData(AuthenticationMode.JwtWithCookie, "/api/accounts/refresh-token-cookie")]
+    public async Task RefreshTokenAsync(AuthenticationMode authenticationMode, string endpoint)
     {
         // Arrange
         var client = Factory.CreateClient();
@@ -56,26 +58,36 @@ public sealed class AccountEndpointTests(ITestOutputHelper testOutputHelper, Web
         var loginRequest = new LoginRequest
         {
             Username = "admin",
-            Password = "<PASSWORD>"
+            Password = "<PASSWORD>",
+            AuthenticationMode = authenticationMode
         };
         
         var httpResponseMessage = await client.PostAsJsonAsync("/api/accounts/login", loginRequest);
         
         httpResponseMessage.EnsureSuccessStatusCode();
     
-        var loginResponse = await httpResponseMessage.Content.ReadFromJsonAsync<LoginResponse>();
-        Assert.NotNull(loginResponse);
-        
-        var token = loginResponse.Token;
-        Assert.False(string.IsNullOrEmpty(token), "Token should not be null or empty.");
-
-        var refreshRequest = new RefreshTokenRequest
+        RefreshTokenRequest refreshTokenRequest = null;
+        if (authenticationMode == AuthenticationMode.JwtWithCookie)
         {
-            RefreshToken = loginResponse.RefreshToken,
-        };
+            var cookie = httpResponseMessage.Headers.GetValues("Set-Cookie").FirstOrDefault();
+            client.DefaultRequestHeaders.Add("Cookie", cookie!);
+        }
+        else
+        {
+            var loginResponse = await httpResponseMessage.Content.ReadFromJsonAsync<LoginResponse>();
+            Assert.NotNull(loginResponse);
+        
+            var token = loginResponse.Token;
+            Assert.False(string.IsNullOrEmpty(token), "Token should not be null or empty.");
+
+            refreshTokenRequest = new RefreshTokenRequest
+            {
+                RefreshToken = loginResponse.RefreshToken!
+            };
+        }
         
         // Act
-        var refreshTokenResponse = await client.PostAsJsonAsync("/api/accounts/refresh", refreshRequest);
+        var refreshTokenResponse = await client.PostAsJsonAsync(endpoint, refreshTokenRequest);
         
         // Assert
         refreshTokenResponse.EnsureSuccessStatusCode();

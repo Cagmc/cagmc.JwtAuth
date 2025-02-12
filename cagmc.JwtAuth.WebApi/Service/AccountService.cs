@@ -1,4 +1,5 @@
 ﻿using System.Security.Claims;
+using cagmc.JwtAuth.WebApi.Common.Constants;
 using cagmc.JwtAuth.WebApi.Common.Enum;
 using cagmc.JwtAuth.WebApi.Domain;
 using cagmc.Response.Core;
@@ -36,35 +37,49 @@ internal sealed class AccountService(
             return Response<LoginResponse>.Unauthorized;
         }
         
-        var tokenExpires = DateTime.Now.AddMinutes(30);
-        var token = GetRefreshTokenForUser(user, tokenExpires);
-        
-        var refreshTokenExpires = DateTime.Now.AddDays(7);
-        var refreshToken = jwtService.GenerateRefreshToken();
-        var refreshTokenData = new RefreshTokenData
-        {
-            Username = request.Username, RefreshToken = refreshToken, Expires = refreshTokenExpires
-        };
-
-        var response = new LoginResponse
-        {
-            Token = token,
-            RefreshToken = refreshToken,
-            Expires = tokenExpires,
-            RefreshExpires = refreshTokenExpires
-        };
-        
-        await ManageRefreshTokenDataAsync(request, refreshTokenData, cancellationToken);
+        var claims = GetClaimsForUser(user);
 
         if (request.AuthenticationMode == AuthenticationMode.Cookie)
         {
-            await SignInWithCookieAsync(user, request.IsPersistent);
+            await SignInWithCookieAsync(claims, request.IsPersistent);
+            
+            return Response<LoginResponse>.Success;
         }
+        else
+        {
+            var tokenExpires = DateTime.Now.AddMinutes(30);
+            var token = jwtService.GenerateToken(tokenExpires, claims);
+        
+            var refreshTokenExpires = DateTime.Now.AddDays(7);
+            var refreshToken = jwtService.GenerateRefreshToken();
+            
+            var refreshTokenData = new RefreshTokenData
+            {
+                Username = request.Username, RefreshToken = refreshToken, Expires = refreshTokenExpires
+            };
+        
+            await ManageRefreshTokenDataAsync(request, refreshTokenData, cancellationToken);
 
-        return new Response<LoginResponse> { Data = response, IsSuccess = true };
+            if (request.AuthenticationMode == AuthenticationMode.JwtWithCookie)
+            {
+                claims.Add(new Claim(Claims.RefreshToken, refreshToken));
+                await SignInWithCookieAsync(claims, request.IsPersistent);
+            }
+
+            var response = new LoginResponse
+            {
+                Token = token,
+                Expires =  tokenExpires,
+                
+                RefreshToken = request.AuthenticationMode == AuthenticationMode.Jwt ? refreshToken : null,
+                RefreshExpires = request.AuthenticationMode == AuthenticationMode.Jwt ? refreshTokenExpires : null
+            };
+            
+            return new Response<LoginResponse> { Data = response, IsSuccess = true };
+        }
     }
 
-    private async Task SignInWithCookieAsync(User user, bool isPersistent)
+    private static List<Claim> GetClaimsForUser(User user)
     {
         List<Claim> claims =
         [
@@ -73,6 +88,11 @@ internal sealed class AccountService(
         user.Roles.ForEach(role => claims.Add(new Claim(ClaimTypes.Role, role.Name)));
         user.Claims.ForEach(claim => claims.Add(new Claim(claim.Type, claim.Value)));
         
+        return claims;
+    }
+
+    private async Task SignInWithCookieAsync(List<Claim> claims, bool isPersistent)
+    {
         var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
         var claimsPrincipal = new ClaimsPrincipal(claimsIdentity);
         
@@ -131,8 +151,9 @@ internal sealed class AccountService(
             return Response<RefreshTokenResponse>.Unauthorized;  
         }
     
+        var claims = GetClaimsForUser(user);
         var tokenExpires = DateTime.Now.AddMinutes(30);
-        var newToken = GetRefreshTokenForUser(user, tokenExpires);
+        var newToken = jwtService.GenerateToken(tokenExpires, claims);
     
         var response = new RefreshTokenResponse
         {
@@ -141,21 +162,6 @@ internal sealed class AccountService(
         };
     
         return new Response<RefreshTokenResponse> { Data = response, IsSuccess = true };
-    }
-
-    private string GetRefreshTokenForUser(User user, DateTime tokenExpires)
-    {
-        List<Claim> claims =
-        [
-            new (ClaimTypes.Name, user.Username)
-        ];
-        
-        user.Claims.ForEach(claim => claims.Add(new Claim(claim.Type, claim.Value)));
-        user.Roles.ForEach(role => claims.Add(new Claim(ClaimTypes.Role, role.Name)));
-    
-        var newToken = jwtService.GenerateToken(user.Username, tokenExpires, claims);
-        
-        return newToken;
     }
 
     public async Task LogoutAsync(CancellationToken cancellationToken = default)
@@ -188,9 +194,10 @@ public sealed record LoginRequest
 public sealed record LoginResponse
 {
     public required string Token { get; init; }
-    public required string RefreshToken { get; init; }
     public required DateTime Expires { get; init; }
-    public required DateTime RefreshExpires { get; init; }
+    
+    public required string? RefreshToken { get; init; }
+    public required DateTime? RefreshExpires { get; init; }
 }
 
 public sealed record RefreshTokenRequest

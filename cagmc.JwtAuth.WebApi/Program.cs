@@ -66,7 +66,19 @@ builder.Services.AddAuthorization(options =>
         policy.RequireClaim(Claims.Read, "true");
     });
     
-    options.AddPolicy(Policies.MultitenantPolicy, policy =>
+    options.AddPolicy(Policies.CookiePolicy, policy =>
+    {
+        policy.AuthenticationSchemes.Add(CookieAuthenticationDefaults.AuthenticationScheme);
+        policy.RequireAuthenticatedUser();
+    });
+
+    options.AddPolicy(Policies.JwtPolicy, policy =>
+    {
+        policy.AuthenticationSchemes.Add(JwtBearerDefaults.AuthenticationScheme);
+        policy.RequireAuthenticatedUser();
+    });
+    
+    options.AddPolicy(Policies.MultiAuthPolicy, policy =>
     {
         policy.AuthenticationSchemes.Add(JwtBearerDefaults.AuthenticationScheme);
         policy.AuthenticationSchemes.Add(CookieAuthenticationDefaults.AuthenticationScheme);

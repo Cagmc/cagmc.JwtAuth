@@ -3,5 +3,6 @@
 public enum AuthenticationMode
 {
     Jwt,
-    Cookie
+    Cookie,
+    JwtWithCookie
 }

@@ -4,4 +4,5 @@ public static class Claims
 {
     public const string Read = "read";
     public const string Write = "write";
+    public const string RefreshToken = "refresh-token";
 }

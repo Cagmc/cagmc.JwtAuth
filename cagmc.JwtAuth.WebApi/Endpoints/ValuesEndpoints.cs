@@ -20,19 +20,19 @@ public static class ValuesEndpoints
             .WithName("GetAnonymous");
         
         builder.MapGet("/authenticated", () => "Hello Authenticated!")
-            .RequireAuthorization(Policies.MultitenantPolicy)
+            .RequireAuthorization(Policies.MultiAuthPolicy)
             .WithName("GetAuthenticated");
         
         builder.MapGet("/admin", () => "Hello Admin!")
-            .RequireAuthorization(Policies.AdminPolicy, Policies.MultitenantPolicy)
+            .RequireAuthorization(Policies.AdminPolicy, Policies.MultiAuthPolicy)
             .WithName("GetAdmin");
         
         builder.MapGet("/read", () => "Hello Reader!")
-            .RequireAuthorization(Policies.ReadOnlyPolicy, Policies.MultitenantPolicy)
+            .RequireAuthorization(Policies.ReadOnlyPolicy, Policies.MultiAuthPolicy)
             .WithName("GetRead");
         
         builder.MapGet("/edit", () => "Hello Editor!")
-            .RequireAuthorization(Policies.EditorPolicy, Policies.MultitenantPolicy)
+            .RequireAuthorization(Policies.EditorPolicy, Policies.MultiAuthPolicy)
             .WithName("GetEdit");
         
         return builder;
