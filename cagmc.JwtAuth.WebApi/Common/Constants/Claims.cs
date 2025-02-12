@@ -1,4 +1,4 @@
-﻿namespace cagmc.JwtAuth.WebApi.Constants;
+﻿namespace cagmc.JwtAuth.WebApi.Common.Constants;
 
 public static class Claims
 {

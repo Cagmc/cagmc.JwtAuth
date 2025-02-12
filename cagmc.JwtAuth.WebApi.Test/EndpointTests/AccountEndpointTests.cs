@@ -1,6 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
-using cagmc.JwtAuth.WebApi.Constants;
+using cagmc.JwtAuth.WebApi.Common.Constants;
 using cagmc.JwtAuth.WebApi.Service;
 using Xunit.Abstractions;
 

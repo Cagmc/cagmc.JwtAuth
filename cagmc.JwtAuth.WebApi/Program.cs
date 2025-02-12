@@ -1,5 +1,5 @@
 using System.Text;
-using cagmc.JwtAuth.WebApi.Constants;
+using cagmc.JwtAuth.WebApi.Common.Constants;
 using cagmc.JwtAuth.WebApi.Infrastructure;
 using cagmc.JwtAuth.WebApi.Service;
 using Microsoft.AspNetCore.Authentication.Cookies;

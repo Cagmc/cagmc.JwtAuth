@@ -1,4 +1,4 @@
-﻿using cagmc.JwtAuth.WebApi.Constants;
+﻿using cagmc.JwtAuth.WebApi.Common.Constants;
 using cagmc.JwtAuth.WebApi.Service;
 
 namespace Microsoft.AspNetCore.Builder;

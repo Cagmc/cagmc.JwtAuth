@@ -1,9 +1,6 @@
 ﻿using System.Net.Http.Json;
 using System.Reflection;
 using cagmc.JwtAuth.WebApi.Service;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Mvc.Testing;
-using Microsoft.Extensions.Configuration;
 using Xunit.Abstractions;
 
 namespace cagmc.JwtAuth.WebApi.Test;
@@ -53,27 +50,5 @@ public abstract class TestBase : IClassFixture<WebApiFactory>
         client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
         
         return client;
-    }
-}
-
-public sealed class WebApiFactory : WebApplicationFactory<Program>
-{
-    public string TestId { get; set; } = string.Empty;
-    
-    protected override void ConfigureWebHost(IWebHostBuilder builder)
-    {
-        builder.UseEnvironment("Test");
-        
-        builder.ConfigureAppConfiguration(configurationBuilder =>
-        {
-            var configurationRoot = configurationBuilder.Build();
-            var connectionString =configurationRoot.GetValue<string>("ConnectionStrings:DefaultConnection");
-            connectionString = connectionString!.Replace("{TestId}", TestId);
-            
-            configurationBuilder.AddInMemoryCollection(new Dictionary<string, string>
-            {
-                ["ConnectionStrings:DefaultConnection"] = connectionString
-            }!);
-        });
     }
 }

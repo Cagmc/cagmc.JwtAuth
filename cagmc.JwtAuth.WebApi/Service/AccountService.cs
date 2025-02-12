@@ -1,4 +1,5 @@
 ﻿using System.Security.Claims;
+using cagmc.JwtAuth.WebApi.Common.Enum;
 using cagmc.JwtAuth.WebApi.Domain;
 using cagmc.Response.Core;
 using Microsoft.AspNetCore.Authentication;
@@ -55,7 +56,7 @@ internal sealed class AccountService(
         
         await ManageRefreshTokenDataAsync(request, refreshTokenData, cancellationToken);
 
-        if (request.IsCookie)
+        if (request.AuthenticationMode == AuthenticationMode.Cookie)
         {
             await SignInWithCookieAsync(user, request.IsPersistent);
         }
@@ -181,7 +182,7 @@ public sealed record LoginRequest
     public required string Username { get; init; }
     public required string Password { get; init; }
     public bool IsPersistent { get; init; } = true;
-    public bool IsCookie { get; init; } = false;
+    public AuthenticationMode AuthenticationMode { get; init; } = AuthenticationMode.Jwt;
 }
 
 public sealed record LoginResponse
