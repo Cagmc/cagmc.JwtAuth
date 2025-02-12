@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using cagmc.JwtAuth.WebApi.Common.Constants;
+using cagmc.JwtAuth.WebApi.Common.Enum;
 using cagmc.JwtAuth.WebApi.Service;
 using Xunit.Abstractions;
 
@@ -8,8 +9,10 @@ namespace cagmc.JwtAuth.WebApi.Test.EndpointTests;
 
 public sealed class AccountEndpointTests(ITestOutputHelper testOutputHelper, WebApiFactory factory) : TestBase(testOutputHelper, factory)
 {
-    [Fact]
-    public async Task LoginAsync()
+    [Theory]
+    [InlineData(AuthenticationMode.Jwt)]
+    [InlineData(AuthenticationMode.Cookie)]
+    public async Task LoginAsync(AuthenticationMode authenticationMode)
     {
         // Arrange
         var client = Factory.CreateClient();
@@ -17,7 +20,8 @@ public sealed class AccountEndpointTests(ITestOutputHelper testOutputHelper, Web
         var loginRequest = new LoginRequest
         {
             Username = "admin",
-            Password = "<PASSWORD>"
+            Password = "<PASSWORD>",
+            AuthenticationMode = authenticationMode
         };
         
         // Act
