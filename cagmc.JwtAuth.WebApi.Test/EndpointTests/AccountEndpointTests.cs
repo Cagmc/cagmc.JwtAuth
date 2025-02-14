@@ -66,7 +66,7 @@ public sealed class AccountEndpointTests(ITestOutputHelper testOutputHelper, Web
         
         httpResponseMessage.EnsureSuccessStatusCode();
     
-        RefreshTokenRequest refreshTokenRequest = null;
+        RefreshTokenRequest refreshTokenRequest = null!;
         if (authenticationMode == AuthenticationMode.JwtWithCookie)
         {
             var cookie = httpResponseMessage.Headers.GetValues("Set-Cookie").FirstOrDefault();
