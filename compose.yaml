@@ -1,0 +1,6 @@
+﻿services:
+  cagmc.jwtauth.webapi:
+    image: cagmc.jwtauth.webapi
+    build:
+      context: .
+      dockerfile: cagmc.JwtAuth.WebApi/Dockerfile
