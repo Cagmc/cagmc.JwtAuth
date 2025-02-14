@@ -52,6 +52,18 @@ builder.Services.AddAuthentication()
         };
     });
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(Policies.CorsPolicy, policy =>
+    {
+        policy.WithOrigins(builder.Configuration["Cors"]!)
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials();
+    });
+});
+
+
 builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy(Policies.AdminPolicy, policy =>
@@ -103,6 +115,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseCookiePolicy();
+app.UseCors(Policies.CorsPolicy);
 
 app.UseAuthentication();
 app.UseAuthorization();
