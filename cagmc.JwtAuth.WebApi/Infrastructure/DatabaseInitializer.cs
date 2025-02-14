@@ -19,21 +19,21 @@ internal sealed class DatabaseInitializer(DbContext dbContext) : IDatabaseInitia
         [
             new()
             {
-                Username = "admin",
+                Username = "admin@cagmc.com",
                 Password = "<PASSWORD>",
                 Roles = [new() { Name = Roles.Admin}],
                 Claims = []
             },
             new()
             {
-                Username = "reader",
+                Username = "reader@cagmc.com",
                 Password = "<PASSWORD>",
                 Roles = [],
                 Claims = [new() { Type = Claims.Read, Value = "true" }]
             },
             new()
             {
-                Username = "editor",
+                Username = "editor@cagmc.com",
                 Password = "<PASSWORD>",
                 Roles = [],
                 Claims = 

@@ -36,7 +36,7 @@ public sealed class ValueEndpointTests(ITestOutputHelper testOutputHelper, WebAp
     public async Task GetAuthenticated_Succeeds()
     {
         // Arrange
-        var client = await GetAuthenticatedClientAsync("admin");
+        var client = await GetAuthenticatedClientAsync("admin@cagmc.com");
         
         // Act
         var response = await client.GetAsync("/api/values/authenticated");
@@ -50,7 +50,7 @@ public sealed class ValueEndpointTests(ITestOutputHelper testOutputHelper, WebAp
     public async Task GetAdmin_Fails()
     {
         // Arrange
-        var client = await GetAuthenticatedClientAsync("reader");
+        var client = await GetAuthenticatedClientAsync("reader@cagmc.com");
         
         // Act
         var response = await client.GetAsync("/api/values/admin");
@@ -63,7 +63,7 @@ public sealed class ValueEndpointTests(ITestOutputHelper testOutputHelper, WebAp
     public async Task GetAdmin_Succeeds()
     {
         // Arrange
-        var client = await GetAuthenticatedClientAsync("admin");
+        var client = await GetAuthenticatedClientAsync("admin@cagmc.com");
         
         // Act
         var response = await client.GetAsync("/api/values/admin");
@@ -77,7 +77,7 @@ public sealed class ValueEndpointTests(ITestOutputHelper testOutputHelper, WebAp
     public async Task GetRead_Fails()
     {
         // Arrange
-        var client = await GetAuthenticatedClientAsync("admin");
+        var client = await GetAuthenticatedClientAsync("admin@cagmc.com");
         
         // Act
         var response = await client.GetAsync("/api/values/read");
@@ -90,7 +90,7 @@ public sealed class ValueEndpointTests(ITestOutputHelper testOutputHelper, WebAp
     public async Task GetRead_Success()
     {
         // Arrange
-        var client = await GetAuthenticatedClientAsync("reader");
+        var client = await GetAuthenticatedClientAsync("reader@cagmc.com");
         
         // Act
         var response = await client.GetAsync("/api/values/read");
@@ -103,7 +103,7 @@ public sealed class ValueEndpointTests(ITestOutputHelper testOutputHelper, WebAp
     public async Task GetEdit_Fails()
     {
         // Arrange
-        var client = await GetAuthenticatedClientAsync("reader");
+        var client = await GetAuthenticatedClientAsync("reader@cagmc.com");
         
         // Act
         var response = await client.GetAsync("/api/values/edit");
@@ -116,7 +116,7 @@ public sealed class ValueEndpointTests(ITestOutputHelper testOutputHelper, WebAp
     public async Task GetEdit_Success()
     {
         // Arrange
-        var client = await GetAuthenticatedClientAsync("editor");
+        var client = await GetAuthenticatedClientAsync("editor@cagmc.com");
         
         // Act
         var response = await client.GetAsync("/api/values/edit");

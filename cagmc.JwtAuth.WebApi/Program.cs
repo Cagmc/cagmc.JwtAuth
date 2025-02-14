@@ -56,7 +56,7 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy(Policies.CorsPolicy, policy =>
     {
-        policy.WithOrigins(builder.Configuration["Cors"]!)
+        policy.WithOrigins(builder.Configuration.GetSection("Cors").Get<string[]>()!)
             .AllowAnyHeader()
             .AllowAnyMethod()
             .AllowCredentials();

@@ -19,7 +19,7 @@ public sealed class AccountEndpointTests(ITestOutputHelper testOutputHelper, Web
 
         var loginRequest = new LoginRequest
         {
-            Username = "admin",
+            Username = "admin@cagmc.com",
             Password = "<PASSWORD>",
             AuthenticationMode = authenticationMode
         };
@@ -37,7 +37,7 @@ public sealed class AccountEndpointTests(ITestOutputHelper testOutputHelper, Web
     public async Task LogoutAsync()
     {
         // Arrange
-        var client = await GetAuthenticatedClientAsync("admin");
+        var client = await GetAuthenticatedClientAsync("admin@cagmc.com");
         
         // Act
         var logoutResponse = await client.PostAsync("/api/accounts/logout", null);
@@ -57,7 +57,7 @@ public sealed class AccountEndpointTests(ITestOutputHelper testOutputHelper, Web
         
         var loginRequest = new LoginRequest
         {
-            Username = "admin",
+            Username = "admin@cagmc.com",
             Password = "<PASSWORD>",
             AuthenticationMode = authenticationMode
         };
@@ -101,7 +101,7 @@ public sealed class AccountEndpointTests(ITestOutputHelper testOutputHelper, Web
     public async Task MeAsync()
     {
         // Arrange
-        var client = await GetAuthenticatedClientAsync("admin");
+        var client = await GetAuthenticatedClientAsync("admin@cagmc.com");
         
         // Act
         var meResponse = await client.GetAsync("/api/accounts/me");
