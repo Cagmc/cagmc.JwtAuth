@@ -41,6 +41,21 @@ internal static class MagicalObjectEndpoints
                 })
             .WithName("GetMagicalObjects");
 
+        builder.MapPost("",
+                async (CreateMagicalObjectRequest request, IMagicalObjectService service,
+                    CancellationToken cancellationToken) =>
+                {
+                    var response = await service.CreateAsync(request, cancellationToken);
+
+                    return response.Code switch
+                    {
+                        400 => Results.BadRequest(response.Message),
+                        409 => Results.Conflict(response.Message),
+                        _ => Results.Ok()
+                    };
+                })
+            .WithName("CreateMagicalObject");
+
         return builder;
     }
 }
