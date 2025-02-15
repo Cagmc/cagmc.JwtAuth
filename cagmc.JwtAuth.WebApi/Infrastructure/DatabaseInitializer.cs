@@ -1,5 +1,6 @@
 ﻿using cagmc.JwtAuth.WebApi.Common.Constants;
 using cagmc.JwtAuth.WebApi.Domain;
+
 using Microsoft.EntityFrameworkCore;
 
 namespace cagmc.JwtAuth.WebApi.Infrastructure;
@@ -15,13 +16,13 @@ internal sealed class DatabaseInitializer(DbContext dbContext) : IDatabaseInitia
     {
         await dbContext.Database.EnsureCreatedAsync(cancellationToken);
 
-        List<User> users = 
+        List<User> users =
         [
             new()
             {
                 Username = "admin@cagmc.com",
                 Password = "<PASSWORD>",
-                Roles = [new() { Name = Roles.Admin}],
+                Roles = [new UserRole { Name = Roles.Admin }],
                 Claims = []
             },
             new()
@@ -29,23 +30,23 @@ internal sealed class DatabaseInitializer(DbContext dbContext) : IDatabaseInitia
                 Username = "reader@cagmc.com",
                 Password = "<PASSWORD>",
                 Roles = [],
-                Claims = [new() { Type = Claims.Read, Value = "true" }]
+                Claims = [new UserClaim { Type = Claims.Read, Value = "true" }]
             },
             new()
             {
                 Username = "editor@cagmc.com",
                 Password = "<PASSWORD>",
                 Roles = [],
-                Claims = 
+                Claims =
                 [
-                    new() { Type = Claims.Read, Value = "true" }, 
-                    new() { Type = Claims.Write, Value = "true" }
+                    new UserClaim { Type = Claims.Read, Value = "true" },
+                    new UserClaim { Type = Claims.Write, Value = "true" }
                 ]
             }
         ];
-        
+
         dbContext.AddRange(users);
-        
+
         await dbContext.SaveChangesAsync(cancellationToken);
     }
 }
