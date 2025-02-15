@@ -13,6 +13,8 @@ public interface IMagicalObjectService
 
     Task<Response.Core.Response> CreateAsync(CreateMagicalObjectRequest request,
         CancellationToken cancellationToken = default);
+
+    Task<Response.Core.Response> DeleteAsync(int id, CancellationToken cancellationToken = default);
 }
 
 internal sealed class MagicalObjectService(DbContext dbContext) : IMagicalObjectService
@@ -70,6 +72,20 @@ internal sealed class MagicalObjectService(DbContext dbContext) : IMagicalObject
         };
 
         dbContext.Add(entity);
+        await dbContext.SaveChangesAsync(cancellationToken);
+
+        return Response.Core.Response.Success;
+    }
+
+    public async Task<Response.Core.Response> DeleteAsync(int id, CancellationToken cancellationToken = default)
+    {
+        var entityToDelete = await dbContext.Set<MagicalObject>()
+            .Where(x => x.Id == id)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (entityToDelete is null) return Response.Core.Response.NotFound;
+
+        dbContext.Remove(entityToDelete);
         await dbContext.SaveChangesAsync(cancellationToken);
 
         return Response.Core.Response.Success;

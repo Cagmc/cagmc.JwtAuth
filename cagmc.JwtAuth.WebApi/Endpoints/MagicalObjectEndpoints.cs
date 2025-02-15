@@ -56,6 +56,20 @@ internal static class MagicalObjectEndpoints
                 })
             .WithName("CreateMagicalObject");
 
+        builder.MapDelete("{id}",
+                async (int id, IMagicalObjectService service, CancellationToken cancellationToken) =>
+                {
+                    var response = await service.DeleteAsync(id, cancellationToken);
+
+                    return response.Code switch
+                    {
+                        400 => Results.BadRequest(response.Message),
+                        404 => Results.NotFound(response.Message),
+                        _ => Results.Ok()
+                    };
+                })
+            .WithName("DeleteMagicalObject");
+
         return builder;
     }
 }
