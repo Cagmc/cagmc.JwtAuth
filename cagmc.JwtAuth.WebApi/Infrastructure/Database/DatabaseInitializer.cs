@@ -1,4 +1,7 @@
-﻿using cagmc.JwtAuth.WebApi.Common.Constants;
+﻿using System.Globalization;
+
+using cagmc.JwtAuth.WebApi.Common.Constants;
+using cagmc.JwtAuth.WebApi.Common.Enum;
 using cagmc.JwtAuth.WebApi.Domain;
 
 using Microsoft.EntityFrameworkCore;
@@ -46,6 +49,34 @@ internal sealed class DatabaseInitializer(DbContext dbContext) : IDatabaseInitia
         ];
 
         dbContext.AddRange(users);
+
+        List<MagicalObject> magicalObjects =
+        [
+            new()
+            {
+                Name = "Artifact X",
+                Description = "A misterious artifact",
+                Elemental = ElementalType.Radiation,
+                Discovered = DateTime.Parse("1978.06.19", new DateTimeFormatInfo()),
+                Properties =
+                [
+                    new MagicalProperty { Name = "Radiation", Value = "50" }
+                ]
+            },
+            new()
+            {
+                Name = "Sword of Attila",
+                Description = "Sword of the Hun leader",
+                Elemental = ElementalType.Fire,
+                Discovered = DateTime.Parse("452.07.25", new DateTimeFormatInfo()),
+                Properties =
+                [
+                    new MagicalProperty { Name = "Flame", Value = "13" }
+                ]
+            }
+        ];
+        
+        dbContext.AddRange(magicalObjects);
 
         await dbContext.SaveChangesAsync(cancellationToken);
     }
