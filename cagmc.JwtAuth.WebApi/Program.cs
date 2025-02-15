@@ -1,4 +1,5 @@
 using System.Text;
+using System.Text.Json.Serialization;
 
 using cagmc.JwtAuth.WebApi;
 using cagmc.JwtAuth.WebApi.Application;
@@ -88,6 +89,11 @@ builder.Services.AddAuthorizationBuilder()
         policy.AuthenticationSchemes.Add(CookieAuthenticationDefaults.AuthenticationScheme);
         policy.RequireAuthenticatedUser();
     });
+
+builder.Services.ConfigureHttpJsonOptions(options =>
+{
+    options.SerializerOptions.Converters.Add(new JsonStringEnumConverter());
+});
 
 builder.Services.AddOpenApi();
 

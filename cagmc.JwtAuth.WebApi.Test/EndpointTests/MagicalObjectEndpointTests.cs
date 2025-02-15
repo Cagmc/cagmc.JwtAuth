@@ -17,8 +17,8 @@ public sealed class MagicalObjectEndpointTests(ITestOutputHelper testOutputHelpe
             $"nameFilter=fi" +
             $"&discoveredFrom={DateTime.UtcNow.AddDays(-10):o}" +
             $"&discoveredTo={DateTime.UtcNow:o}" +
-            $"&elementalFilterSet=0" +
-            $"&elementalFilterSet=1";
+            $"&elementalFilterSet=None" +
+            $"&elementalFilterSet=Fire";
 
         // Act
         var response = await client.GetAsync($"/api/magical-objects?{query}");
