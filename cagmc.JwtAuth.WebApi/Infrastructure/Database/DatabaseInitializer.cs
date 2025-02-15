@@ -3,7 +3,7 @@ using cagmc.JwtAuth.WebApi.Domain;
 
 using Microsoft.EntityFrameworkCore;
 
-namespace cagmc.JwtAuth.WebApi.Infrastructure;
+namespace cagmc.JwtAuth.WebApi.Infrastructure.Database;
 
 public interface IDatabaseInitializer
 {

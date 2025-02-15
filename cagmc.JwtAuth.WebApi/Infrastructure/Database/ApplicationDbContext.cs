@@ -2,7 +2,7 @@
 
 using Microsoft.EntityFrameworkCore;
 
-namespace cagmc.JwtAuth.WebApi.Infrastructure;
+namespace cagmc.JwtAuth.WebApi.Infrastructure.Database;
 
 internal sealed class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : DbContext(options)
 {

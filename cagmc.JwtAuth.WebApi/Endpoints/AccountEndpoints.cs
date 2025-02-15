@@ -1,4 +1,5 @@
-﻿using cagmc.JwtAuth.WebApi.Common.Constants;
+﻿using cagmc.JwtAuth.WebApi.Application.Services;
+using cagmc.JwtAuth.WebApi.Common.Constants;
 using cagmc.JwtAuth.WebApi.Common.Enum;
 using cagmc.JwtAuth.WebApi.Service;
 
@@ -12,30 +13,25 @@ public static class AccountEndpoints
             .ConfigureAccountRoutes()
             .WithTags("Accounts")
             .WithOpenApi();
-        
+
         return app;
     }
 
     private static RouteGroupBuilder ConfigureAccountRoutes(this RouteGroupBuilder builder)
     {
-        builder.MapPost("/login", async (LoginRequest model, IAccountService accountService, CancellationToken cancellationToken) =>
-            {
-                var response = await accountService.LoginAsync(model, cancellationToken);
-
-                if (response.Code == 401)
+        builder.MapPost("/login",
+                async (LoginRequest model, IAccountService accountService, CancellationToken cancellationToken) =>
                 {
-                    return Results.Unauthorized(); 
-                }
+                    var response = await accountService.LoginAsync(model, cancellationToken);
 
-                if (model.AuthenticationMode == AuthenticationMode.Jwt)
-                {
-                    return Results.Ok(response.Data);
-                }
-                
-                return Results.Ok();
-            })
+                    if (response.Code == 401) return Results.Unauthorized();
+
+                    if (model.AuthenticationMode == AuthenticationMode.Jwt) return Results.Ok(response.Data);
+
+                    return Results.Ok();
+                })
             .WithName("Login");
-        
+
         builder.MapPost("/logout", async (IAccountService accountService, CancellationToken cancellationToken) =>
             {
                 await accountService.LogoutAsync(cancellationToken);
@@ -43,7 +39,7 @@ public static class AccountEndpoints
             })
             .RequireAuthorization(Policies.MultiAuthPolicy)
             .WithName("Logout");
-        
+
         builder.MapPost("/refresh-token", async (
                 RefreshTokenRequest model,
                 IAccountService accountService,
@@ -51,49 +47,34 @@ public static class AccountEndpoints
             {
                 var response = await accountService.RefreshTokenAsync(model, cancellationToken);
 
-                if (response.Code == 400)
-                {
-                    return Results.BadRequest(response.Message);
-                }
-                
-                if (response.Code == 401)
-                {
-                    return Results.Unauthorized();
-                }
-                
+                if (response.Code == 400) return Results.BadRequest(response.Message);
+
+                if (response.Code == 401) return Results.Unauthorized();
+
                 return Results.Ok(response.Data);
             })
             .WithName("RefreshToken");
-        
+
         builder.MapPost("/refresh-token-cookie", async (
                 ICurrentUserService currentUserService,
                 IAccountService accountService,
                 CancellationToken cancellationToken) =>
             {
                 var refreshToken = currentUserService.RefreshToken;
-                
-                if (string.IsNullOrEmpty(refreshToken))
-                {
-                    return Results.Unauthorized();
-                }
-                
+
+                if (string.IsNullOrEmpty(refreshToken)) return Results.Unauthorized();
+
                 var model = new RefreshTokenRequest
                 {
                     RefreshToken = refreshToken
                 };
-                
+
                 var response = await accountService.RefreshTokenAsync(model, cancellationToken);
 
-                if (response.Code == 400)
-                {
-                    return Results.BadRequest(response.Message);
-                }
-                
-                if (response.Code == 401)
-                {
-                    return Results.Unauthorized();
-                }
-                
+                if (response.Code == 400) return Results.BadRequest(response.Message);
+
+                if (response.Code == 401) return Results.Unauthorized();
+
                 return Results.Ok(response.Data);
             })
             .RequireAuthorization(Policies.CookiePolicy)
@@ -107,7 +88,7 @@ public static class AccountEndpoints
             })
             .RequireAuthorization(Policies.MultiAuthPolicy)
             .WithName("Me");
-    
+
         return builder;
     }
 }

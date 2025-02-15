@@ -2,17 +2,13 @@
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
+
+using cagmc.JwtAuth.WebApi.Application.Services;
+
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 
 namespace cagmc.JwtAuth.WebApi.Service;
-
-public interface IJwtService
-{
-    public string GenerateToken(DateTime expires, List<Claim>? additionalClaims);
-    public string GenerateRefreshToken();
-    public bool ValidateToken(string token);
-}
 
 internal sealed class JwtService(IOptions<JwtOptions> options) : IJwtService
 {
@@ -22,31 +18,28 @@ internal sealed class JwtService(IOptions<JwtOptions> options) : IJwtService
         {
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
         };
-        
-        if (additionalClaims is not null)
-        {
-            claims = claims.Concat(additionalClaims).ToArray();
-        }
+
+        if (additionalClaims is not null) claims = claims.Concat(additionalClaims).ToArray();
 
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(options.Value.Secret));
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
         var token = new JwtSecurityToken(
-            issuer: options.Value.Issuer,
-            audience: options.Value.Audience,
-            claims: claims,
+            options.Value.Issuer,
+            options.Value.Audience,
+            claims,
             expires: expires,
             signingCredentials: credentials);
 
         var result = new JwtSecurityTokenHandler().WriteToken(token);
-        
+
         return result;
     }
-    
+
     public string GenerateRefreshToken()
     {
         var randomBytes = new byte[options.Value.RefreshTokenSize];
-        
+
         using var rng = RandomNumberGenerator.Create();
         rng.GetBytes(randomBytes);
 

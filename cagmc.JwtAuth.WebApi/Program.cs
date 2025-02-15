@@ -1,30 +1,22 @@
 using System.Text;
 
+using cagmc.JwtAuth.WebApi;
+using cagmc.JwtAuth.WebApi.Application;
 using cagmc.JwtAuth.WebApi.Common.Constants;
 using cagmc.JwtAuth.WebApi.Infrastructure;
-using cagmc.JwtAuth.WebApi.Service;
 
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 
 using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddScoped<IDatabaseInitializer, DatabaseInitializer>();
-builder.Services.AddDbContext<DbContext, ApplicationDbContext>(options =>
-    options.UseInMemoryDatabase(builder.Configuration.GetConnectionString("DefaultConnection")!));
-
-builder.Services.AddHttpContextAccessor();
-
-builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection("Jwt"));
-
-builder.Services.AddScoped<IAccountService, AccountService>();
-builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
-builder.Services.AddScoped<IJwtService, JwtService>();
-builder.Services.AddScoped<IMagicalObjectService, MagicalObjectService>();
+builder.Services
+    .AddInfrastructureLayer(builder.Configuration)
+    .AddApplicationLayer(builder.Configuration)
+    .AddWebLayer(builder.Configuration);
 
 builder.Services.AddAuthentication()
     .AddCookie(CookieAuthenticationDefaults.AuthenticationScheme, options =>
@@ -108,11 +100,7 @@ builder.Services.AddOpenApi();
 
 var app = builder.Build();
 
-await using (var scope = app.Services.CreateAsyncScope())
-{
-    var initializer = scope.ServiceProvider.GetRequiredService<IDatabaseInitializer>();
-    await initializer.InitializeAsync();
-}
+await app.ConfigureDatabaseAsync();
 
 if (app.Environment.IsDevelopment())
 {

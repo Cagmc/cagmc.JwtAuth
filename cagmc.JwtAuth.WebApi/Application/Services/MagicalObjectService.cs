@@ -1,4 +1,4 @@
-﻿namespace cagmc.JwtAuth.WebApi.Service;
+﻿namespace cagmc.JwtAuth.WebApi.Application.Services;
 
 public interface IMagicalObjectService
 {

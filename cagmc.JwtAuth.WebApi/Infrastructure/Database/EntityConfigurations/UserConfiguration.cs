@@ -2,7 +2,7 @@
 
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace cagmc.JwtAuth.WebApi.Infrastructure.EntityConfigurations;
+namespace cagmc.JwtAuth.WebApi.Infrastructure.Database.EntityConfigurations;
 
 internal sealed class UserConfiguration : EntityConfigurationBase<User>
 {

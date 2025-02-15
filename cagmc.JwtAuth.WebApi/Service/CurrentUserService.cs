@@ -1,14 +1,9 @@
 using System.Security.Claims;
+
+using cagmc.JwtAuth.WebApi.Application.Services;
 using cagmc.JwtAuth.WebApi.Common.Constants;
 
 namespace cagmc.JwtAuth.WebApi.Service;
-
-public interface ICurrentUserService
-{
-    string UserName { get; }
-    string Role { get; }
-    string RefreshToken { get; }
-}
 
 internal sealed class CurrentUserService(IHttpContextAccessor httpContextAccessor) : ICurrentUserService
 {
@@ -17,6 +12,9 @@ internal sealed class CurrentUserService(IHttpContextAccessor httpContextAccesso
     public string UserName => GetClaimValue(ClaimTypes.Name);
     public string Role => GetClaimValue(ClaimTypes.Role);
     public string RefreshToken => GetClaimValue(Claims.RefreshToken);
-    
-    private string GetClaimValue(string claimType) => _httpContext?.User.FindFirst(claimType)?.Value ?? string.Empty;
+
+    private string GetClaimValue(string claimType)
+    {
+        return _httpContext?.User.FindFirst(claimType)?.Value ?? string.Empty;
+    }
 }

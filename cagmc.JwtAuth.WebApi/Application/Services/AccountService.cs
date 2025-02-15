@@ -1,18 +1,24 @@
 ﻿using System.Security.Claims;
+
 using cagmc.JwtAuth.WebApi.Common.Constants;
 using cagmc.JwtAuth.WebApi.Common.Enum;
 using cagmc.JwtAuth.WebApi.Domain;
+using cagmc.JwtAuth.WebApi.Service;
 using cagmc.Response.Core;
+
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 
-namespace cagmc.JwtAuth.WebApi.Service;
+namespace cagmc.JwtAuth.WebApi.Application.Services;
 
 public interface IAccountService
 {
     Task<Response<LoginResponse>> LoginAsync(LoginRequest request, CancellationToken cancellationToken = default);
-    Task<Response<RefreshTokenResponse>> RefreshTokenAsync(RefreshTokenRequest request, CancellationToken cancellationToken = default);
+
+    Task<Response<RefreshTokenResponse>> RefreshTokenAsync(RefreshTokenRequest request,
+        CancellationToken cancellationToken = default);
+
     Task LogoutAsync(CancellationToken cancellationToken = default);
     Task<MeViewModel> MeAsync(CancellationToken cancellationToken = default);
 }
@@ -28,55 +34,105 @@ internal sealed class AccountService(
     {
         var user = await dbContext.Set<User>()
             .AsNoTracking()
-            .Where(x => x.Username == request.Username )
+            .Where(x => x.Username == request.Username)
             .Where(x => x.Password == request.Password)
             .FirstOrDefaultAsync(cancellationToken);
 
-        if (user is null)
-        {
-            return Response<LoginResponse>.Unauthorized;
-        }
-        
+        if (user is null) return Response<LoginResponse>.Unauthorized;
+
         var claims = GetClaimsForUser(user);
 
         if (request.AuthenticationMode == AuthenticationMode.Cookie)
         {
             await SignInWithCookieAsync(claims, request.IsPersistent);
-            
+
             return Response<LoginResponse>.Success;
         }
-        else
+
+        var tokenExpires = DateTime.Now.AddMinutes(30);
+        var token = jwtService.GenerateToken(tokenExpires, claims);
+
+        var refreshTokenExpires = DateTime.Now.AddDays(7);
+        var refreshToken = jwtService.GenerateRefreshToken();
+
+        var refreshTokenData = new RefreshTokenData
         {
-            var tokenExpires = DateTime.Now.AddMinutes(30);
-            var token = jwtService.GenerateToken(tokenExpires, claims);
-        
-            var refreshTokenExpires = DateTime.Now.AddDays(7);
-            var refreshToken = jwtService.GenerateRefreshToken();
-            
-            var refreshTokenData = new RefreshTokenData
-            {
-                Username = request.Username, RefreshToken = refreshToken, Expires = refreshTokenExpires
-            };
-        
-            await ManageRefreshTokenDataAsync(request, refreshTokenData, cancellationToken);
+            Username = request.Username, RefreshToken = refreshToken, Expires = refreshTokenExpires
+        };
 
-            if (request.AuthenticationMode == AuthenticationMode.JwtWithCookie)
-            {
-                claims.Add(new Claim(Claims.RefreshToken, refreshToken));
-                await SignInWithCookieAsync(claims, request.IsPersistent);
-            }
+        await ManageRefreshTokenDataAsync(request, refreshTokenData, cancellationToken);
 
-            var response = new LoginResponse
-            {
-                Token = token,
-                Expires =  tokenExpires,
-                
-                RefreshToken = request.AuthenticationMode == AuthenticationMode.Jwt ? refreshToken : null,
-                RefreshExpires = request.AuthenticationMode == AuthenticationMode.Jwt ? refreshTokenExpires : null
-            };
-            
-            return new Response<LoginResponse> { Data = response, IsSuccess = true };
+        if (request.AuthenticationMode == AuthenticationMode.JwtWithCookie)
+        {
+            claims.Add(new Claim(Claims.RefreshToken, refreshToken));
+            await SignInWithCookieAsync(claims, request.IsPersistent);
         }
+
+        var response = new LoginResponse
+        {
+            Token = token,
+            Expires = tokenExpires,
+
+            RefreshToken = request.AuthenticationMode == AuthenticationMode.Jwt ? refreshToken : null,
+            RefreshExpires = request.AuthenticationMode == AuthenticationMode.Jwt ? refreshTokenExpires : null
+        };
+
+        return new Response<LoginResponse> { Data = response, IsSuccess = true };
+    }
+
+    public async Task<Response<RefreshTokenResponse>> RefreshTokenAsync(RefreshTokenRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var existingToken = await dbContext.Set<RefreshTokenData>()
+            .AsTracking()
+            .FirstOrDefaultAsync(t => t.RefreshToken == request.RefreshToken, cancellationToken);
+
+        if (existingToken is null)
+            return new Response<RefreshTokenResponse> { Code = 400, IsSuccess = false, Message = "Invalid token." };
+
+        if (existingToken.Expires < DateTime.Now)
+        {
+            dbContext.Remove(existingToken);
+            await dbContext.SaveChangesAsync(cancellationToken);
+
+            return new Response<RefreshTokenResponse> { Code = 400, IsSuccess = false, Message = "Token expired." };
+        }
+
+        var user = await dbContext.Set<User>()
+            .AsNoTracking()
+            .FirstOrDefaultAsync(u => u.Username == existingToken.Username, cancellationToken);
+
+        if (user is null) return Response<RefreshTokenResponse>.Unauthorized;
+
+        var claims = GetClaimsForUser(user);
+        var tokenExpires = DateTime.Now.AddMinutes(30);
+        var newToken = jwtService.GenerateToken(tokenExpires, claims);
+
+        var response = new RefreshTokenResponse
+        {
+            Token = newToken,
+            Expires = tokenExpires
+        };
+
+        return new Response<RefreshTokenResponse> { Data = response, IsSuccess = true };
+    }
+
+    public async Task LogoutAsync(CancellationToken cancellationToken = default)
+    {
+        await httpContextAccessor.HttpContext!
+            .SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+    }
+
+    public Task<MeViewModel> MeAsync(CancellationToken cancellationToken = default)
+    {
+        var userName = currentUserService.UserName;
+        var role = currentUserService.Role;
+
+        return Task.FromResult(new MeViewModel
+        {
+            Username = userName,
+            Role = role
+        });
     }
 
     private static List<Claim> GetClaimsForUser(User user)
@@ -87,7 +143,7 @@ internal sealed class AccountService(
         ];
         user.Roles.ForEach(role => claims.Add(new Claim(ClaimTypes.Role, role.Name)));
         user.Claims.ForEach(claim => claims.Add(new Claim(claim.Type, claim.Value)));
-        
+
         return claims;
     }
 
@@ -95,9 +151,9 @@ internal sealed class AccountService(
     {
         var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
         var claimsPrincipal = new ClaimsPrincipal(claimsIdentity);
-        
+
         await httpContextAccessor.HttpContext!.SignInAsync(
-            CookieAuthenticationDefaults.AuthenticationScheme, 
+            CookieAuthenticationDefaults.AuthenticationScheme,
             claimsPrincipal, new AuthenticationProperties
             {
                 IsPersistent = isPersistent,
@@ -113,73 +169,10 @@ internal sealed class AccountService(
             .Where(t => t.Username == request.Username)
             .SingleOrDefaultAsync(cancellationToken);
 
-        if (existingRefreshToken is not null)
-        {
-            dbContext.Remove(existingRefreshToken);
-        }
+        if (existingRefreshToken is not null) dbContext.Remove(existingRefreshToken);
 
         dbContext.Add(refreshTokenData);
         await dbContext.SaveChangesAsync(cancellationToken);
-    }
-
-    public async Task<Response<RefreshTokenResponse>> RefreshTokenAsync(RefreshTokenRequest request,
-        CancellationToken cancellationToken = default)
-    {
-        var existingToken = await dbContext.Set<RefreshTokenData>()
-            .AsTracking()
-            .FirstOrDefaultAsync(t => t.RefreshToken == request.RefreshToken, cancellationToken);
-        
-        if (existingToken is null)
-        {
-            return new Response<RefreshTokenResponse> { Code = 400, IsSuccess = false, Message = "Invalid token." };
-        }
-
-        if (existingToken.Expires < DateTime.Now)
-        {
-            dbContext.Remove(existingToken);
-            await dbContext.SaveChangesAsync(cancellationToken);
-            
-            return new Response<RefreshTokenResponse> { Code = 400, IsSuccess = false, Message = "Token expired."};
-        }
-        
-        var user = await dbContext.Set<User>()
-            .AsNoTracking()
-            .FirstOrDefaultAsync(u => u.Username == existingToken.Username, cancellationToken);
-
-        if (user is null)
-        {
-            return Response<RefreshTokenResponse>.Unauthorized;  
-        }
-    
-        var claims = GetClaimsForUser(user);
-        var tokenExpires = DateTime.Now.AddMinutes(30);
-        var newToken = jwtService.GenerateToken(tokenExpires, claims);
-    
-        var response = new RefreshTokenResponse
-        {
-            Token = newToken,
-            Expires = tokenExpires
-        };
-    
-        return new Response<RefreshTokenResponse> { Data = response, IsSuccess = true };
-    }
-
-    public async Task LogoutAsync(CancellationToken cancellationToken = default)
-    {
-        await httpContextAccessor.HttpContext!
-            .SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-    }
-
-    public Task<MeViewModel> MeAsync(CancellationToken cancellationToken = default)
-    {
-        var userName = currentUserService.UserName;
-        var role = currentUserService.Role;
-        
-        return Task.FromResult(new MeViewModel
-        {
-            Username = userName,
-            Role = role
-        });
     }
 }
 
@@ -195,7 +188,7 @@ public sealed record LoginResponse
 {
     public required string Token { get; init; }
     public required DateTime Expires { get; init; }
-    
+
     public required string? RefreshToken { get; init; }
     public required DateTime? RefreshExpires { get; init; }
 }

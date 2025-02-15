@@ -3,7 +3,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace cagmc.JwtAuth.WebApi.Infrastructure.EntityConfigurations;
+namespace cagmc.JwtAuth.WebApi.Infrastructure.Database.EntityConfigurations;
 
 internal abstract class EntityConfigurationBase<TEntity> : IEntityTypeConfiguration<TEntity> where TEntity : EntityBase
 {
