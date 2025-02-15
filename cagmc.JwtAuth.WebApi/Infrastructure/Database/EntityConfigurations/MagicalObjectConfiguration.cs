@@ -1,4 +1,5 @@
-﻿using cagmc.JwtAuth.WebApi.Domain;
+﻿using cagmc.JwtAuth.WebApi.Common.Enum;
+using cagmc.JwtAuth.WebApi.Domain;
 
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -11,5 +12,8 @@ internal sealed class MagicalObjectConfiguration : EntityConfigurationBase<Magic
         builder.Property(x => x.Name).IsRequired();
 
         builder.OwnsMany(x => x.Properties);
+
+        builder.Property(x => x.Elemental)
+            .HasConversion(x => x.ToString(), x => Enum.Parse<ElementalType>(x));
     }
 }
