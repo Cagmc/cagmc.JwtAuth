@@ -1,4 +1,7 @@
-﻿namespace cagmc.JwtAuth.WebApi.Endpoints;
+﻿using cagmc.JwtAuth.WebApi.Application.Services;
+using cagmc.JwtAuth.WebApi.Common.Constants;
+
+namespace cagmc.JwtAuth.WebApi.Endpoints;
 
 internal static class MagicalObjectEndpoints
 {
@@ -7,7 +10,7 @@ internal static class MagicalObjectEndpoints
         app.MapGroup("/api/magical-objects")
             .ConfigureValuesRoutes()
             .WithTags("MagicalObjects")
-            .RequireAuthorization()
+            .RequireAuthorization(Policies.MultiAuthPolicy)
             .WithOpenApi();
 
         return app;
@@ -15,6 +18,16 @@ internal static class MagicalObjectEndpoints
 
     private static RouteGroupBuilder ConfigureValuesRoutes(this RouteGroupBuilder builder)
     {
+        builder.MapGet("", async (IMagicalObjectService service, CancellationToken cancellationToken) =>
+            {
+                var filter = new MagicalObjectFilter();
+
+                var response = await service.GetMagicalObjectsAsync(filter, cancellationToken);
+
+                return response;
+            })
+            .WithName("GetMagicalObjects");
+
         return builder;
     }
 }
