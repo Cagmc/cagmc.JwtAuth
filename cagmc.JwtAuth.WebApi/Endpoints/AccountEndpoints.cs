@@ -1,9 +1,8 @@
 ﻿using cagmc.JwtAuth.WebApi.Application.Services;
 using cagmc.JwtAuth.WebApi.Common.Constants;
 using cagmc.JwtAuth.WebApi.Common.Enum;
-using cagmc.JwtAuth.WebApi.Service;
 
-namespace Microsoft.AspNetCore.Builder;
+namespace cagmc.JwtAuth.WebApi.Endpoints;
 
 public static class AccountEndpoints
 {

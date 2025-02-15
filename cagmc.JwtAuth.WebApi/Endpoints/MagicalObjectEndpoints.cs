@@ -1,4 +1,4 @@
-﻿namespace Microsoft.AspNetCore.Builder;
+﻿namespace cagmc.JwtAuth.WebApi.Endpoints;
 
 internal static class MagicalObjectEndpoints
 {

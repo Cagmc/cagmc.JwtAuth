@@ -1,6 +1,6 @@
 ﻿using cagmc.JwtAuth.WebApi.Common.Constants;
 
-namespace Microsoft.AspNetCore.Builder;
+namespace cagmc.JwtAuth.WebApi.Endpoints;
 
 public static class ValuesEndpoints
 {

@@ -3,6 +3,7 @@ using System.Text;
 using cagmc.JwtAuth.WebApi;
 using cagmc.JwtAuth.WebApi.Application;
 using cagmc.JwtAuth.WebApi.Common.Constants;
+using cagmc.JwtAuth.WebApi.Endpoints;
 using cagmc.JwtAuth.WebApi.Infrastructure;
 
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -61,40 +62,32 @@ builder.Services.AddCors(options =>
     });
 });
 
-
-builder.Services.AddAuthorization(options =>
-{
-    options.AddPolicy(Policies.AdminPolicy, policy =>
-        policy.RequireRole(Roles.Admin));
-
-    options.AddPolicy(Policies.ReadOnlyPolicy, policy =>
-        policy.RequireClaim(Claims.Read, "true"));
-
-    options.AddPolicy(Policies.EditorPolicy, policy =>
+builder.Services.AddAuthorizationBuilder()
+    .AddPolicy(Policies.AdminPolicy, policy =>
+        policy.RequireRole(Roles.Admin))
+    .AddPolicy(Policies.ReadOnlyPolicy, policy =>
+        policy.RequireClaim(Claims.Read, "true"))
+    .AddPolicy(Policies.EditorPolicy, policy =>
     {
         policy.RequireClaim(Claims.Write, "true");
         policy.RequireClaim(Claims.Read, "true");
-    });
-
-    options.AddPolicy(Policies.CookiePolicy, policy =>
+    })
+    .AddPolicy(Policies.CookiePolicy, policy =>
     {
         policy.AuthenticationSchemes.Add(CookieAuthenticationDefaults.AuthenticationScheme);
         policy.RequireAuthenticatedUser();
-    });
-
-    options.AddPolicy(Policies.JwtPolicy, policy =>
+    })
+    .AddPolicy(Policies.JwtPolicy, policy =>
     {
         policy.AuthenticationSchemes.Add(JwtBearerDefaults.AuthenticationScheme);
         policy.RequireAuthenticatedUser();
-    });
-
-    options.AddPolicy(Policies.MultiAuthPolicy, policy =>
+    })
+    .AddPolicy(Policies.MultiAuthPolicy, policy =>
     {
         policy.AuthenticationSchemes.Add(JwtBearerDefaults.AuthenticationScheme);
         policy.AuthenticationSchemes.Add(CookieAuthenticationDefaults.AuthenticationScheme);
         policy.RequireAuthenticatedUser();
     });
-});
 
 builder.Services.AddOpenApi();
 

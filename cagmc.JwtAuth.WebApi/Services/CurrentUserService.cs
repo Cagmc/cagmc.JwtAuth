@@ -3,7 +3,7 @@ using System.Security.Claims;
 using cagmc.JwtAuth.WebApi.Application.Services;
 using cagmc.JwtAuth.WebApi.Common.Constants;
 
-namespace cagmc.JwtAuth.WebApi.Service;
+namespace cagmc.JwtAuth.WebApi.Services;
 
 internal sealed class CurrentUserService(IHttpContextAccessor httpContextAccessor) : ICurrentUserService
 {

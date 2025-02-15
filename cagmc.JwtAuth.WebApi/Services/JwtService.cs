@@ -8,7 +8,7 @@ using cagmc.JwtAuth.WebApi.Application.Services;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 
-namespace cagmc.JwtAuth.WebApi.Service;
+namespace cagmc.JwtAuth.WebApi.Services;
 
 internal sealed class JwtService(IOptions<JwtOptions> options) : IJwtService
 {

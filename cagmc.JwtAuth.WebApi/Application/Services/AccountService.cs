@@ -3,7 +3,6 @@
 using cagmc.JwtAuth.WebApi.Common.Constants;
 using cagmc.JwtAuth.WebApi.Common.Enum;
 using cagmc.JwtAuth.WebApi.Domain;
-using cagmc.JwtAuth.WebApi.Service;
 using cagmc.Response.Core;
 
 using Microsoft.AspNetCore.Authentication;

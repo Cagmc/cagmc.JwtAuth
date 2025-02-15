@@ -1,6 +1,6 @@
 ﻿using cagmc.JwtAuth.WebApi.Application.Services;
 using cagmc.JwtAuth.WebApi.Infrastructure.Database;
-using cagmc.JwtAuth.WebApi.Service;
+using cagmc.JwtAuth.WebApi.Services;
 
 namespace cagmc.JwtAuth.WebApi;
 
