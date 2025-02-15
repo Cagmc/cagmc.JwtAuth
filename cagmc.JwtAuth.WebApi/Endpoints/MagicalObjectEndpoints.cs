@@ -1,5 +1,8 @@
 ﻿using cagmc.JwtAuth.WebApi.Application.Services;
 using cagmc.JwtAuth.WebApi.Common.Constants;
+using cagmc.JwtAuth.WebApi.Common.Enum;
+
+using Microsoft.AspNetCore.Mvc;
 
 namespace cagmc.JwtAuth.WebApi.Endpoints;
 
@@ -18,14 +21,24 @@ internal static class MagicalObjectEndpoints
 
     private static RouteGroupBuilder ConfigureValuesRoutes(this RouteGroupBuilder builder)
     {
-        builder.MapGet("", async (IMagicalObjectService service, CancellationToken cancellationToken) =>
-            {
-                var filter = new MagicalObjectFilter();
+        builder.MapGet("",
+                async ([FromQuery] string? nameFilter, [FromQuery] DateTime? discoveredFrom,
+                    [FromQuery] DateTime? discoveredTo, [FromQuery] ElementalType[]? elementalFilterSet,
+                    IMagicalObjectService service,
+                    CancellationToken cancellationToken) =>
+                {
+                    var filter = new MagicalObjectFilter
+                    {
+                        NameFilter = nameFilter,
+                        DiscoveredTo = discoveredTo,
+                        DiscoveredFrom = discoveredFrom,
+                        ElementalFilterSet = elementalFilterSet?.ToList()
+                    };
 
-                var response = await service.GetMagicalObjectsAsync(filter, cancellationToken);
+                    var response = await service.GetMagicalObjectsAsync(filter, cancellationToken);
 
-                return response;
-            })
+                    return response;
+                })
             .WithName("GetMagicalObjects");
 
         return builder;

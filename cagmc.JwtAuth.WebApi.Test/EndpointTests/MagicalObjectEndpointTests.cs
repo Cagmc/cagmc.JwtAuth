@@ -13,8 +13,15 @@ public sealed class MagicalObjectEndpointTests(ITestOutputHelper testOutputHelpe
         // Arrange
         var client = await GetAuthenticatedClientAsync("admin@cagmc.com");
 
+        var query =
+            $"nameFilter=fi" +
+            $"&discoveredFrom={DateTime.UtcNow.AddDays(-10):o}" +
+            $"&discoveredTo={DateTime.UtcNow:o}" +
+            $"&elementalFilterSet=0" +
+            $"&elementalFilterSet=1";
+
         // Act
-        var response = await client.GetAsync("/api/magical-objects");
+        var response = await client.GetAsync($"/api/magical-objects?{query}");
 
         // Assert
         response.EnsureSuccessStatusCode();
