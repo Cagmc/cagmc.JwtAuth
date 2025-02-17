@@ -38,6 +38,36 @@ public sealed class MagicalObjectEndpointTests(ITestOutputHelper testOutputHelpe
     }
 
     [Fact]
+    public async Task GetMagicalObject()
+    {
+        // Arrange
+        var client = await GetAuthenticatedClientAsync("admin@cagmc.com");
+        MagicalObject magicalObject = null!;
+
+        await using (var scope = factory.Services.CreateAsyncScope())
+        {
+            var dbContext = scope.ServiceProvider.GetRequiredService<DbContext>();
+            magicalObject = await dbContext.Set<MagicalObject>().FirstAsync();
+        }
+
+        // Act
+        var response = await client.GetAsync($"/api/magical-objects/{magicalObject.Id}");
+
+        // Assert
+        response.EnsureSuccessStatusCode();
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        var viewModel = await response.Content.ReadFromJsonAsync<MagicalObjectViewModel>(JsonSerializerOptions);
+
+        Assert.NotNull(viewModel);
+        Assert.Equal(magicalObject.Name, viewModel.Name);
+        Assert.Equal(magicalObject.Elemental, viewModel.Elemental);
+        Assert.Equal(magicalObject.Discovered, viewModel.Discovered);
+        Assert.Equal(magicalObject.Description, viewModel.Description);
+        Assert.Equal(magicalObject.Properties.Count, viewModel.Properties.Count);
+    }
+
+    [Fact]
     public async Task CreateMagicalObject()
     {
         // Arrange
@@ -77,6 +107,54 @@ public sealed class MagicalObjectEndpointTests(ITestOutputHelper testOutputHelpe
         Assert.Equal(request.Properties.Count, createdEntity.Properties.Count);
         Assert.Equal(request.Properties[0].Name, createdEntity.Properties[0].Name);
         Assert.Equal(request.Properties[0].Value, createdEntity.Properties[0].Value);
+    }
+
+    [Fact]
+    public async Task UpdateMagicalObject()
+    {
+        // Arrange
+        var client = await GetAuthenticatedClientAsync("admin@cagmc.com");
+        MagicalObject originalMagicalObject = null!;
+
+        await using (var scope = factory.Services.CreateAsyncScope())
+        {
+            var dbContext = scope.ServiceProvider.GetRequiredService<DbContext>();
+            originalMagicalObject = await dbContext.Set<MagicalObject>().FirstAsync();
+        }
+
+        var updateModel = new UpdateMagicalObjectRequest
+        {
+            Name = "X",
+            Description = "X",
+            Discovered = DateTime.Parse("1978.06.19", new DateTimeFormatInfo()),
+            Elemental = ElementalType.Lightning,
+            Properties =
+            [
+                new UpdateMagicalPropertyRequest { Name = "Power-X", Value = "100" }
+            ]
+        };
+
+        // Act
+        var response = await client.PutAsJsonAsync($"/api/magical-objects/{originalMagicalObject.Id}", updateModel);
+
+        // Assert
+        response.EnsureSuccessStatusCode();
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        await using (var scope = factory.Services.CreateAsyncScope())
+        {
+            var dbContext = scope.ServiceProvider.GetRequiredService<DbContext>();
+            var updatedEntity = await dbContext.Set<MagicalObject>()
+                .Where(x => x.Id == originalMagicalObject.Id)
+                .FirstOrDefaultAsync();
+
+            Assert.NotNull(updatedEntity);
+            Assert.Equal(updateModel.Name, updatedEntity!.Name);
+            Assert.Equal(updateModel.Description, updatedEntity.Description);
+            Assert.Equal(updateModel.Discovered, updatedEntity.Discovered);
+            Assert.Equal(updateModel.Elemental, updatedEntity.Elemental);
+            Assert.Equal(updateModel.Properties.Count, updatedEntity.Properties.Count);
+        }
     }
 
     [Fact]

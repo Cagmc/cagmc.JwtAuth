@@ -41,6 +41,16 @@ internal static class MagicalObjectEndpoints
                 })
             .WithName("GetMagicalObjects");
 
+        builder.MapGet("{id}", async (int id, IMagicalObjectService service, CancellationToken cancellationToken) =>
+            {
+                var response = await service.GetMagicalObjectAsync(id, cancellationToken);
+
+                if (response is null) return Results.NotFound();
+
+                return Results.Ok(response);
+            })
+            .WithName("GetMagicalObject");
+
         builder.MapPost("",
                 async (CreateMagicalObjectRequest request, IMagicalObjectService service,
                     CancellationToken cancellationToken) =>
@@ -55,6 +65,21 @@ internal static class MagicalObjectEndpoints
                     };
                 })
             .WithName("CreateMagicalObject");
+
+        builder.MapPut("{id}",
+                async (int id, UpdateMagicalObjectRequest request, IMagicalObjectService service,
+                    CancellationToken cancellationToken) =>
+                {
+                    var response = await service.UpdateAsync(id, request, cancellationToken);
+
+                    return response.Code switch
+                    {
+                        400 => Results.BadRequest(response.Message),
+                        404 => Results.NotFound(response.Message),
+                        _ => Results.Ok()
+                    };
+                })
+            .WithName("UpdateMagicalObject");
 
         builder.MapDelete("{id}",
                 async (int id, IMagicalObjectService service, CancellationToken cancellationToken) =>

@@ -1,6 +1,8 @@
 ﻿using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Reflection;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 using cagmc.JwtAuth.WebApi.Application.Services;
 using cagmc.JwtAuth.WebApi.Common.Enum;
@@ -19,8 +21,18 @@ public abstract class TestBase : IClassFixture<WebApiFactory>
         Factory = factory;
         Factory.TestId = GetTestName(testOutputHelper);
         Configuration = Factory.Services.GetRequiredService<IConfiguration>();
+
+        JsonSerializerOptions = new JsonSerializerOptions
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            Converters =
+            {
+                new JsonStringEnumConverter(JsonNamingPolicy.CamelCase)
+            }
+        };
     }
 
+    protected JsonSerializerOptions JsonSerializerOptions { get; }
     protected WebApiFactory Factory { get; }
     protected IConfiguration Configuration { get; }
 
