@@ -8,6 +8,7 @@ using cagmc.Response.Core;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
 namespace cagmc.JwtAuth.WebApi.Application.Services;
 
@@ -24,6 +25,7 @@ public interface IAccountService
 
 internal sealed class AccountService(
     DbContext dbContext,
+    IOptions<AccountOptions> accountOptions,
     IHttpContextAccessor httpContextAccessor,
     ICurrentUserService currentUserService,
     IJwtService jwtService) : IAccountService
@@ -48,10 +50,10 @@ internal sealed class AccountService(
             return Response<LoginResponse>.Success;
         }
 
-        var tokenExpires = DateTime.Now.AddMinutes(30);
+        var tokenExpires = DateTime.Now.AddMinutes(accountOptions.Value.TokenExpirationInMinutes);
         var token = jwtService.GenerateToken(tokenExpires, claims);
 
-        var refreshTokenExpires = DateTime.Now.AddDays(7);
+        var refreshTokenExpires = DateTime.Now.AddDays(accountOptions.Value.RefreshTokenExpirationInDays);
         var refreshToken = jwtService.GenerateRefreshToken();
 
         var refreshTokenData = new RefreshTokenData
@@ -104,7 +106,7 @@ internal sealed class AccountService(
         if (user is null) return Response<RefreshTokenResponse>.Unauthorized;
 
         var claims = GetClaimsForUser(user);
-        var tokenExpires = DateTime.Now.AddMinutes(30);
+        var tokenExpires = DateTime.Now.AddMinutes(accountOptions.Value.TokenExpirationInMinutes);
         var newToken = jwtService.GenerateToken(tokenExpires, claims);
 
         var response = new RefreshTokenResponse
@@ -156,7 +158,7 @@ internal sealed class AccountService(
             claimsPrincipal, new AuthenticationProperties
             {
                 IsPersistent = isPersistent,
-                ExpiresUtc = DateTime.UtcNow.AddDays(7)
+                ExpiresUtc = DateTime.UtcNow.AddDays(accountOptions.Value.CookieExpirationInDays)
             });
     }
 
@@ -207,4 +209,11 @@ public sealed record MeViewModel
 {
     public required string Username { get; init; }
     public required string Role { get; init; }
+}
+
+public sealed record AccountOptions
+{
+    public required int RefreshTokenExpirationInDays { get; init; }
+    public required int TokenExpirationInMinutes { get; init; }
+    public required int CookieExpirationInDays { get; init; }
 }
