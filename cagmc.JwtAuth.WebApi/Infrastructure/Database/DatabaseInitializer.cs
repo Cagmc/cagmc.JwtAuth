@@ -24,21 +24,21 @@ internal sealed class DatabaseInitializer(DbContext dbContext) : IDatabaseInitia
             new()
             {
                 Username = "admin@cagmc.com",
-                Password = "<PASSWORD>",
+                Password = "password",
                 Roles = [new UserRole { Name = Roles.Admin }],
                 Claims = []
             },
             new()
             {
                 Username = "reader@cagmc.com",
-                Password = "<PASSWORD>",
+                Password = "password",
                 Roles = [],
                 Claims = [new UserClaim { Type = Claims.Read, Value = "true" }]
             },
             new()
             {
                 Username = "editor@cagmc.com",
-                Password = "<PASSWORD>",
+                Password = "password",
                 Roles = [],
                 Claims =
                 [
@@ -55,7 +55,7 @@ internal sealed class DatabaseInitializer(DbContext dbContext) : IDatabaseInitia
             new()
             {
                 Name = "Artifact X",
-                Description = "A misterious artifact",
+                Description = "A mysterious artifact",
                 Elemental = ElementalType.Radiation,
                 Discovered = DateTime.Parse("1978.06.19", new DateTimeFormatInfo()),
                 Properties =
@@ -75,7 +75,7 @@ internal sealed class DatabaseInitializer(DbContext dbContext) : IDatabaseInitia
                 ]
             }
         ];
-        
+
         dbContext.AddRange(magicalObjects);
 
         await dbContext.SaveChangesAsync(cancellationToken);
