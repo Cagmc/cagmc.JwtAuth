@@ -23,7 +23,7 @@ public sealed class AccountEndpointTests(ITestOutputHelper testOutputHelper, Web
         var loginRequest = new LoginRequest
         {
             Username = "admin@cagmc.com",
-            Password = "<PASSWORD>",
+            Password = "password",
             AuthenticationMode = authenticationMode
         };
 
@@ -61,7 +61,7 @@ public sealed class AccountEndpointTests(ITestOutputHelper testOutputHelper, Web
         var loginRequest = new LoginRequest
         {
             Username = "admin@cagmc.com",
-            Password = "<PASSWORD>",
+            Password = "password",
             AuthenticationMode = authenticationMode
         };
 

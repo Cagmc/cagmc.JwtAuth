@@ -48,7 +48,7 @@ public abstract class TestBase : IClassFixture<WebApiFactory>
         return testName;
     }
 
-    protected async Task<HttpClient> GetAuthenticatedClientAsync(string username, string password = "<PASSWORD>")
+    protected async Task<HttpClient> GetAuthenticatedClientAsync(string username, string password = "password")
     {
         var client = Factory.CreateClient();
         var authenticationMode = Configuration.GetValue<AuthenticationMode>("AuthenticationMode");
