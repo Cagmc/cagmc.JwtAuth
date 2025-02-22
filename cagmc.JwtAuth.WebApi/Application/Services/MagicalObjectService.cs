@@ -1,4 +1,5 @@
 ﻿using cagmc.JwtAuth.WebApi.Common.Enums;
+using cagmc.JwtAuth.WebApi.Common.Extensions;
 using cagmc.JwtAuth.WebApi.Domain;
 using cagmc.Response.Core;
 
@@ -44,15 +45,18 @@ internal sealed class MagicalObjectService(DbContext dbContext) : IMagicalObject
 
         var totalCount = await query.CountAsync(cancellationToken);
 
-        var items = await query
+        var selectedQuery = query
             .Select(x => new MagicalObjectItemViewModel
             {
                 Id = x.Id,
                 Name = x.Name,
                 Elemental = x.Elemental,
                 Discovered = x.Discovered
-            })
-            .OrderBy(x => x.Name)
+            });
+
+        selectedQuery = selectedQuery.OrderBy("<>", "Name<>asc", filter.SortBy);
+
+        var items = await selectedQuery
             .Skip(skip)
             .Take(take)
             .ToListAsync(cancellationToken);
@@ -165,6 +169,7 @@ public sealed record MagicalObjectFilter
     public required DateTime? DiscoveredTo { get; init; }
     public required int? PageIndex { get; init; }
     public required int? PageSize { get; init; }
+    public required string? SortBy { get; init; }
 }
 
 public sealed record MagicalObjectItemViewModel
