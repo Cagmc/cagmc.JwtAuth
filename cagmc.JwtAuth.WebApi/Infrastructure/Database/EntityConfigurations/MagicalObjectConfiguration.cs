@@ -1,4 +1,4 @@
-﻿using cagmc.JwtAuth.WebApi.Common.Enum;
+﻿using cagmc.JwtAuth.WebApi.Common.Enums;
 using cagmc.JwtAuth.WebApi.Domain;
 
 using Microsoft.EntityFrameworkCore.Metadata.Builders;

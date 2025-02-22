@@ -1,4 +1,4 @@
-﻿using cagmc.JwtAuth.WebApi.Common.Enum;
+﻿using cagmc.JwtAuth.WebApi.Common.Enums;
 using cagmc.JwtAuth.WebApi.Domain;
 using cagmc.Response.Core;
 
@@ -27,6 +27,9 @@ internal sealed class MagicalObjectService(DbContext dbContext) : IMagicalObject
     public async Task<ListResponse<MagicalObjectItemViewModel>> GetMagicalObjectsAsync(MagicalObjectFilter filter,
         CancellationToken cancellationToken = default)
     {
+        var skip = (filter.PageIndex ?? 0) * (filter.PageSize ?? 10);
+        var take = filter.PageSize ?? 10;
+
         var query = dbContext.Set<MagicalObject>()
             .AsQueryable();
 
@@ -39,6 +42,8 @@ internal sealed class MagicalObjectService(DbContext dbContext) : IMagicalObject
 
         if (filter.DiscoveredTo.HasValue) query = query.Where(x => x.Discovered <= filter.DiscoveredTo.Value);
 
+        var totalCount = await query.CountAsync(cancellationToken);
+
         var items = await query
             .Select(x => new MagicalObjectItemViewModel
             {
@@ -48,9 +53,11 @@ internal sealed class MagicalObjectService(DbContext dbContext) : IMagicalObject
                 Discovered = x.Discovered
             })
             .OrderBy(x => x.Name)
+            .Skip(skip)
+            .Take(take)
             .ToListAsync(cancellationToken);
 
-        return new ListResponse<MagicalObjectItemViewModel>(items);
+        return new ListResponse<MagicalObjectItemViewModel>(items, totalCount);
     }
 
     public async Task<MagicalObjectViewModel?> GetMagicalObjectAsync(int id,
@@ -152,10 +159,12 @@ internal sealed class MagicalObjectService(DbContext dbContext) : IMagicalObject
 
 public sealed record MagicalObjectFilter
 {
-    public string? NameFilter { get; init; }
-    public List<ElementalType>? ElementalFilterSet { get; init; }
-    public DateTime? DiscoveredFrom { get; init; }
-    public DateTime? DiscoveredTo { get; init; }
+    public required string? NameFilter { get; init; }
+    public required List<ElementalType>? ElementalFilterSet { get; init; }
+    public required DateTime? DiscoveredFrom { get; init; }
+    public required DateTime? DiscoveredTo { get; init; }
+    public required int? PageIndex { get; init; }
+    public required int? PageSize { get; init; }
 }
 
 public sealed record MagicalObjectItemViewModel

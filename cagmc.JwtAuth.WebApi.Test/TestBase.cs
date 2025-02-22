@@ -5,7 +5,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 
 using cagmc.JwtAuth.WebApi.Application.Services;
-using cagmc.JwtAuth.WebApi.Common.Enum;
+using cagmc.JwtAuth.WebApi.Common.Enums;
 
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;

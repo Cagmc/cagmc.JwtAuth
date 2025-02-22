@@ -1,8 +1,7 @@
 ﻿using cagmc.JwtAuth.WebApi.Application.Services;
 using cagmc.JwtAuth.WebApi.Common.Constants;
-using cagmc.JwtAuth.WebApi.Common.Enum;
-
-using Microsoft.AspNetCore.Mvc;
+using cagmc.JwtAuth.WebApi.Common.Enums;
+using cagmc.JwtAuth.WebApi.Common.Extensions;
 
 namespace cagmc.JwtAuth.WebApi.Endpoints;
 
@@ -22,17 +21,21 @@ internal static class MagicalObjectEndpoints
     private static RouteGroupBuilder ConfigureValuesRoutes(this RouteGroupBuilder builder)
     {
         builder.MapGet("",
-                async ([FromQuery] string? nameFilter, [FromQuery] DateTime? discoveredFrom,
-                    [FromQuery] DateTime? discoveredTo, [FromQuery] ElementalType[]? elementalFilterSet,
+                async (
+                    IHttpContextAccessor httpContextAccessor,
                     IMagicalObjectService service,
                     CancellationToken cancellationToken) =>
                 {
+                    var query = httpContextAccessor.HttpContext!.Request.Query;
+
                     var filter = new MagicalObjectFilter
                     {
-                        NameFilter = nameFilter,
-                        DiscoveredTo = discoveredTo,
-                        DiscoveredFrom = discoveredFrom,
-                        ElementalFilterSet = elementalFilterSet?.ToList()
+                        NameFilter = query.GetStringValue("nameFilter"),
+                        PageIndex = query.GetIntValue("pageIndex"),
+                        PageSize = query.GetIntValue("pageSize"),
+                        DiscoveredTo = query.GetDateTimeValue("discoveredTo"),
+                        DiscoveredFrom = query.GetDateTimeValue("discoveredFrom"),
+                        ElementalFilterSet = query.GetEnumListValue<ElementalType>("elementalFilterSet")
                     };
 
                     var response = await service.GetMagicalObjectsAsync(filter, cancellationToken);

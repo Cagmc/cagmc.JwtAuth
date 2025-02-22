@@ -3,7 +3,7 @@ using System.Net;
 using System.Net.Http.Json;
 
 using cagmc.JwtAuth.WebApi.Application.Services;
-using cagmc.JwtAuth.WebApi.Common.Enum;
+using cagmc.JwtAuth.WebApi.Common.Enums;
 using cagmc.JwtAuth.WebApi.Domain;
 
 using Microsoft.EntityFrameworkCore;

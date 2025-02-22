@@ -1,7 +1,7 @@
 ﻿using System.Security.Claims;
 
 using cagmc.JwtAuth.WebApi.Common.Constants;
-using cagmc.JwtAuth.WebApi.Common.Enum;
+using cagmc.JwtAuth.WebApi.Common.Enums;
 using cagmc.JwtAuth.WebApi.Domain;
 using cagmc.Response.Core;
 

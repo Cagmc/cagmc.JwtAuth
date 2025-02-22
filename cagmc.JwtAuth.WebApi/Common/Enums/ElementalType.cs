@@ -1,4 +1,4 @@
-﻿namespace cagmc.JwtAuth.WebApi.Common.Enum;
+﻿namespace cagmc.JwtAuth.WebApi.Common.Enums;
 
 public enum ElementalType
 {
@@ -9,5 +9,7 @@ public enum ElementalType
     Earth,
     Water,
     Poison,
-    Radiation
+    Radiation,
+    Light,
+    Darkness
 }
