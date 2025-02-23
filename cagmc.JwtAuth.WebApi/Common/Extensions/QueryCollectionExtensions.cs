@@ -21,6 +21,11 @@ public static class QueryCollectionExtensions
             : null;
     }
 
+    public static bool GetBoolValue(this IQueryCollection query, string key, bool defaultValue = false)
+    {
+        return query.TryGetValue(key, out var values) ? bool.Parse(values.FirstOrDefault()!) : defaultValue;
+    }
+
     public static T? GetEnumValue<T>(this IQueryCollection query, string key) where T : struct
     {
         return query.TryGetValue(key, out var values) ? Enum.Parse<T>(values.FirstOrDefault()!) : null;

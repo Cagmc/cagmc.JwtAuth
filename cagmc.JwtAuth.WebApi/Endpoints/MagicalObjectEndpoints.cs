@@ -33,7 +33,8 @@ internal static class MagicalObjectEndpoints
                         NameFilter = query.GetStringValue("nameFilter"),
                         PageIndex = query.GetIntValue("pageIndex"),
                         PageSize = query.GetIntValue("pageSize"),
-                        SortBy = query.GetStringValue("sort"),
+                        SortByColumn = query.GetStringValue("sortByColumn"),
+                        IsAscending = query.GetBoolValue("isAscending", true),
                         DiscoveredTo = query.GetDateTimeValue("discoveredTo"),
                         DiscoveredFrom = query.GetDateTimeValue("discoveredFrom"),
                         ElementalFilterSet = query.GetEnumListValue<ElementalType>("elementalFilterSet")
