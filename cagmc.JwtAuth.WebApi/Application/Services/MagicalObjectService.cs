@@ -28,9 +28,6 @@ internal sealed class MagicalObjectService(DbContext dbContext) : IMagicalObject
     public async Task<ListResponse<MagicalObjectItemViewModel>> GetMagicalObjectsAsync(MagicalObjectFilter filter,
         CancellationToken cancellationToken = default)
     {
-        var skip = (filter.PageIndex ?? 0) * (filter.PageSize ?? 10);
-        var take = filter.PageSize ?? 10;
-
         var query = dbContext.Set<MagicalObject>()
             .AsQueryable();
 
@@ -54,11 +51,8 @@ internal sealed class MagicalObjectService(DbContext dbContext) : IMagicalObject
                 Discovered = x.Discovered
             });
 
-        selectedQuery = selectedQuery.OrderBy("<>", "Name<>asc", filter.SortBy);
-
         var items = await selectedQuery
-            .Skip(skip)
-            .Take(take)
+            .OrderBy("<>", "Name<>asc", filter.SortBy, filter.PageIndex, filter.PageSize)
             .ToListAsync(cancellationToken);
 
         return new ListResponse<MagicalObjectItemViewModel>(items, totalCount);

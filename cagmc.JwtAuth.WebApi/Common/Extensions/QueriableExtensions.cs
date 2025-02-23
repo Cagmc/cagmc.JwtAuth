@@ -4,11 +4,13 @@ namespace cagmc.JwtAuth.WebApi.Common.Extensions;
 
 public static class QueriableExtensions
 {
-    public static IOrderedQueryable<T> OrderBy<T>(
+    public static IQueryable<T> OrderBy<T>(
         this IQueryable<T> source,
         string split,
         string defaultSort,
-        string? sortFilter)
+        string? sortFilter,
+        int? pageIndex,
+        int? pageSize)
     {
         var filterParts = string.IsNullOrEmpty(sortFilter)
             ? defaultSort.Split(split)
@@ -17,9 +19,20 @@ public static class QueriableExtensions
         var column = filterParts[0];
         var direction = filterParts[1];
 
-        return direction == "asc"
+        var orderedQuery = direction == "asc"
             ? OrderBy(source, column)
             : OrderByDescending(source, column);
+
+        if (pageIndex.HasValue && pageSize.HasValue)
+        {
+            var orderedPaginatedQuery = orderedQuery
+                .Skip((pageIndex.Value - 1) * pageSize.Value)
+                .Take(pageSize.Value);
+            
+            return orderedPaginatedQuery;
+        }
+        
+        return orderedQuery;
     }
 
     public static IOrderedQueryable<T> OrderBy<T>(
@@ -62,7 +75,7 @@ public static class QueriableExtensions
         foreach (var prop in props)
         {
             // use reflection (not ComponentModel) to mirror LINQ
-            var pi = type.GetProperty(prop);
+            var pi = type.GetProperty(prop)!;
             expr = Expression.Property(expr, pi);
             type = pi.PropertyType;
         }
